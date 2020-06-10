@@ -47,7 +47,11 @@ export class ReactGanttChart extends React.Component<{}, State> {
 
     return (
       <div className="circleCard" style={style}>
-        {/* ... */}
+        <p>
+          {textLabel}
+          <br />
+          <em>{textValue}</em>
+        </p>
       </div>
     );
   }
