@@ -1,9 +1,19 @@
 {
     "dataRoles": [
         {
-            "displayName": "Category Data",
-            "name": "category",
+            "displayName": "Project",
+            "name": "project",
             "kind": "Grouping"
+        },
+        {
+            "displayName": "Start Date",
+            "name": "startDate",
+            "kind": "Measure"
+        },
+        {
+            "displayName": "End Date",
+            "name": "endDate",
+            "kind": "Measure"
         },
         {
             "displayName": "Measure Data",
