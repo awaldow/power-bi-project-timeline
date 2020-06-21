@@ -1,9 +1,9 @@
 {
     "visual": {
-        "name": "projectTimeline",
-        "displayName": "Project Timeline",
-        "guid": "customGantt155637C251A54D99B0A3FEF5CCA9BBC6",
-        "visualClassName": "Visual",
+        "name": "Project Timeline",
+        "displayName": "projectTimeline",
+        "guid": "projectTimeline155637C251A54D99B0A3FEF5CCA9BBC6",
+        "visualClassName": "BarChart",
         "version": "0.0.1",
         "description": "",
         "supportUrl": "",

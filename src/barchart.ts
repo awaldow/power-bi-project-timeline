@@ -38,7 +38,7 @@ import VisualConstructorOptions = powerbi.extensibility.visual.VisualConstructor
 // powerbi.extensibility.utils
 import { createTooltipServiceWrapper, TooltipEventArgs, ITooltipServiceWrapper } from "powerbi-visuals-utils-tooltiputils";
 import { textMeasurementService as tms } from "powerbi-visuals-utils-formattingutils";
-import textMeasurementService = tms.textMeasurementService;
+import textMeasurementService = tms;
 
 import { getValue, getCategoricalObjectValue } from "./objectEnumerationUtility";
 import { getLocalizedString } from "./localization/localizationHelper"
