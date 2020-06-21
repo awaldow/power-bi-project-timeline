@@ -5,7 +5,8 @@ import {
 } from "d3-selection";
 import {
     scaleLinear,
-    scaleBand
+    scaleBand,
+    scaleTime
 } from "d3-scale";
 
 import { axisBottom } from "d3-axis";
@@ -39,7 +40,9 @@ import VisualConstructorOptions = powerbi.extensibility.visual.VisualConstructor
 import { createTooltipServiceWrapper, TooltipEventArgs, ITooltipServiceWrapper } from "powerbi-visuals-utils-tooltiputils";
 
 interface ProjectTimelineSettings {
-    milestonesMarkPhases: boolean;
+    milestonesMarkPhases: {
+        show: boolean;
+    };
 }
 
 interface ProjectTimelineViewModel {
@@ -110,7 +113,9 @@ function visualTransform(options: VisualUpdateOptions, host: IVisualHost): Proje
     /*Convert dataView to your viewModel*/
     let dataViews = options.dataViews;
     let defaultSettings: ProjectTimelineSettings = {
-        milestonesMarkPhases: false
+        milestonesMarkPhases: {
+            show: false
+        }
     };
     let viewModel: ProjectTimelineViewModel = {
         projects: [],
@@ -139,7 +144,9 @@ function visualTransform(options: VisualUpdateOptions, host: IVisualHost): Proje
     const strokeColor: string = getColumnStrokeColor(colorPalette);
 
     let projectTimelineSettings: ProjectTimelineSettings = {
-        milestonesMarkPhases: getValue<boolean>(objects, '', 'milestonesMarkPhases', defaultSettings.milestonesMarkPhases)
+        milestonesMarkPhases: {
+            show: getValue<boolean>(objects, 'milestonesMarkPhases', 'show', defaultSettings.milestonesMarkPhases.show)
+        }
     };
 
     const strokeWidth: number = getColumnStrokeWidth(colorPalette.isHighContrast);
@@ -200,7 +207,7 @@ export class ProjectTimeline implements IVisual {
     private svg: Selection<any>;
     private host: IVisualHost;
     private selectionManager: ISelectionManager;
-    private barContainer: Selection<SVGElement>;
+    private projectContainer: Selection<SVGElement>;
     private xAxis: Selection<SVGElement>;
     private projects: ProjectTimelineRow[];
     private projectTimelineSettings: ProjectTimelineSettings;
@@ -215,15 +222,28 @@ export class ProjectTimeline implements IVisual {
 
     private projectSelection: d3.Selection<d3.BaseType, any, d3.BaseType, any>;
 
+    static Config = {
+        xScalePadding: 0.1,
+        solidOpacity: 1,
+        transparentOpacity: 0.4,
+        margins: {
+            top: 0,
+            right: 0,
+            bottom: 25,
+            left: 30,
+        },
+        xAxisFontMultiplier: 0.04,
+    };
+
     constructor(options: VisualConstructorOptions) {
         this.host = options.host;
         this.element = options.element;
         this.selectionManager = options.host.createSelectionManager();
         this.locale = options.host.locale;
 
-        this.selectionManager.registerOnSelectCallback(() => {
-            this.syncSelectionState(this.projectSelection, <ISelectionId[]>this.selectionManager.getSelectionIds());
-        });
+        // this.selectionManager.registerOnSelectCallback(() => {
+        //     this.syncSelectionState(this.projectSelection, <ISelectionId[]>this.selectionManager.getSelectionIds());
+        // });
 
         this.tooltipServiceWrapper = createTooltipServiceWrapper(this.host.tooltipService, options.element);
 
@@ -231,9 +251,9 @@ export class ProjectTimeline implements IVisual {
             .append('svg')
             .classed('barChart', true);
 
-        this.barContainer = this.svg
+        this.projectContainer = this.svg
             .append('g')
-            .classed('barContainer', true);
+            .classed('projectContainer', true);
 
         this.xAxis = this.svg
             .append('g')
@@ -264,117 +284,42 @@ export class ProjectTimeline implements IVisual {
             .attr("width", width)
             .attr("height", height);
 
-        if (settings.enableAxis.show) {
-            let margins = BarChart.Config.margins;
-            height -= margins.bottom;
-        }
-
-        this.helpLinkElement
-            .classed("hidden", !settings.generalView.showHelpLink)
-            .style("border-color", settings.generalView.helpLinkColor)
-            .style("color", settings.generalView.helpLinkColor);
-
         this.xAxis
-            .style("font-size", Math.min(height, width) * BarChart.Config.xAxisFontMultiplier)
-            .style("fill", settings.enableAxis.fill);
+            .style("font-size", Math.min(height, width) * ProjectTimeline.Config.xAxisFontMultiplier)
+        //.style("fill", settings.enableAxis.fill);
 
-        let yScale = scaleLinear()
-            .domain([0, viewModel.dataMax])
-            .range([height, 0]);
+        // let yScale = scaleLinear()
+        //     .domain([0, viewModel.dataMax])
+        //     .range([height, 0]);
 
-        let xScale = scaleBand()
-            .domain(viewModel.dataPoints.map(d => d.category))
-            .rangeRound([0, width])
-            .padding(0.2);
+        let xScale = scaleTime()
+            .domain([this.firstStartDate(viewModel.projects), this.lastEndDate(viewModel.projects)])
+            .rangeRound([0, width]);
 
         let xAxis = axisBottom(xScale);
         this.xAxis.attr('transform', 'translate(0, ' + height + ')')
             .call(xAxis);
 
         const textNodes = this.xAxis.selectAll("text")
-        BarChart.wordBreak(textNodes, xScale.bandwidth(), height);
-        this.handleAverageLineUpdate(height, width, yScale);
+        //ProjectTimeline.wordBreak(textNodes, xScale.bandwidth(), height);
 
-        this.barSelection = this.barContainer
-            .selectAll('.bar')
-            .data(this.barDataPoints);
-
-        const barSelectionMerged = this.barSelection
-            .enter()
-            .append('rect')
-            .merge(<any>this.barSelection);
-
-        barSelectionMerged.classed('bar', true);
-
-        const opacity: number = viewModel.settings.generalView.opacity / 100;
-        barSelectionMerged
-            .attr("width", xScale.bandwidth())
-            .attr("height", d => height - yScale(<number>d.value))
-            .attr("y", d => yScale(<number>d.value))
-            .attr("x", d => xScale(d.category))
-            .style("fill-opacity", opacity)
-            .style("stroke-opacity", opacity)
-            .style("fill", (dataPoint: BarChartDataPoint) => dataPoint.color)
-            .style("stroke", (dataPoint: BarChartDataPoint) => dataPoint.strokeColor)
-            .style("stroke-width", (dataPoint: BarChartDataPoint) => `${dataPoint.strokeWidth}px`);
-
-        this.tooltipServiceWrapper.addTooltip(this.barContainer.selectAll('.bar'),
-            (tooltipEvent: TooltipEventArgs<BarChartDataPoint>) => this.getTooltipData(tooltipEvent.data),
-            (tooltipEvent: TooltipEventArgs<BarChartDataPoint>) => tooltipEvent.data.selectionId
-        );
-
-        this.syncSelectionState(
-            barSelectionMerged,
-            <ISelectionId[]>this.selectionManager.getSelectionIds()
-        );
-
-        barSelectionMerged.on('click', (d) => {
-            // Allow selection only if the visual is rendered in a view that supports interactivity (e.g. Report)
-            if (this.host.allowInteractions) {
-                const isCtrlPressed: boolean = (<MouseEvent>d3Event).ctrlKey;
-
-                this.selectionManager
-                    .select(d.selectionId, isCtrlPressed)
-                    .then((ids: ISelectionId[]) => {
-                        this.syncSelectionState(barSelectionMerged, ids);
-                    });
-
-                (<Event>d3Event).stopPropagation();
-            }
-        });
-
-        this.barSelection
-            .exit()
-            .remove();
-
-        this.handleClick(barSelectionMerged);
+        this.projectSelection = this.projectContainer
+            .selectAll('.project')
+            .data(this.projects);
     }
 
-    private static wordBreak(
-        textNodes: Selection<any, SVGElement>,
-        allowedWidth: number,
-        maxHeight: number
-    ) {
-        textNodes.each(function () {
-            textMeasurementService.wordBreak(
-                this,
-                allowedWidth,
-                maxHeight);
-        });
-    }
-
-    private handleClick(barSelection: d3.Selection<d3.BaseType, any, d3.BaseType, any>) {
-        // Clear selection when clicking outside a bar
-        this.svg.on('click', (d) => {
-            if (this.host.allowInteractions) {
-                this.selectionManager
-                    .clear()
-                    .then(() => {
-                        this.syncSelectionState(barSelection, []);
-                    });
-            }
-        });
-    }
+    // private handleClick(barSelection: d3.Selection<d3.BaseType, any, d3.BaseType, any>) {
+    //     // Clear selection when clicking outside a bar
+    //     this.svg.on('click', (d) => {
+    //         if (this.host.allowInteractions) {
+    //             this.selectionManager
+    //                 .clear()
+    //                 .then(() => {
+    //                     this.syncSelectionState(barSelection, []);
+    //                 });
+    //         }
+    //     });
+    // }
 
     private handleContextMenu() {
         this.svg.on('contextmenu', () => {
@@ -389,37 +334,49 @@ export class ProjectTimeline implements IVisual {
         });
     }
 
-    private syncSelectionState(
-        selection: Selection<BarChartDataPoint>,
-        selectionIds: ISelectionId[]
-    ): void {
-        if (!selection || !selectionIds) {
-            return;
-        }
-
-        if (!selectionIds.length) {
-            const opacity: number = this.barChartSettings.generalView.opacity / 100;
-            selection
-                .style("fill-opacity", opacity)
-                .style("stroke-opacity", opacity);
-
-            return;
-        }
-
-        const self: this = this;
-
-        selection.each(function (barDataPoint: BarChartDataPoint) {
-            const isSelected: boolean = self.isSelectionIdInArray(selectionIds, barDataPoint.selectionId);
-
-            const opacity: number = isSelected
-                ? BarChart.Config.solidOpacity
-                : BarChart.Config.transparentOpacity;
-
-            d3Select(this)
-                .style("fill-opacity", opacity)
-                .style("stroke-opacity", opacity);
-        });
+    private firstStartDate(
+        projects: ProjectTimelineRow[]
+    ): Date {
+        return Math.min.apply(null, projects.map(p => p.pmAssignDate));
     }
+
+    private lastEndDate(
+        projects: ProjectTimelineRow[]
+    ): Date {
+        return Math.max.apply(null, projects.map(p => p.endDate));
+    }
+
+    // private syncSelectionState(
+    //     selection: Selection<BarChartDataPoint>,
+    //     selectionIds: ISelectionId[]
+    // ): void {
+    //     if (!selection || !selectionIds) {
+    //         return;
+    //     }
+
+    //     if (!selectionIds.length) {
+    //         const opacity: number = this.barChartSettings.generalView.opacity / 100;
+    //         selection
+    //             .style("fill-opacity", opacity)
+    //             .style("stroke-opacity", opacity);
+
+    //         return;
+    //     }
+
+    //     const self: this = this;
+
+    //     selection.each(function (barDataPoint: BarChartDataPoint) {
+    //         const isSelected: boolean = self.isSelectionIdInArray(selectionIds, barDataPoint.selectionId);
+
+    //         const opacity: number = isSelected
+    //             ? BarChart.Config.solidOpacity
+    //             : BarChart.Config.transparentOpacity;
+
+    //         d3Select(this)
+    //             .style("fill-opacity", opacity)
+    //             .style("stroke-opacity", opacity);
+    //     });
+    // }
 
     private isSelectionIdInArray(selectionIds: ISelectionId[], selectionId: ISelectionId): boolean {
         if (!selectionIds || !selectionId) {
@@ -441,69 +398,78 @@ export class ProjectTimeline implements IVisual {
         let objectName = options.objectName;
         let objectEnumeration: VisualObjectInstance[] = [];
 
-        if (!this.barChartSettings ||
-            !this.barChartSettings.enableAxis ||
-            !this.barDataPoints) {
+        if (!this.projectTimelineSettings ||
+            !this.projectTimelineSettings.milestonesMarkPhases ||
+            !this.projects) {
             return objectEnumeration;
         }
 
         switch (objectName) {
-            case 'enableAxis':
+            case 'milestonesMarkPhases':
                 objectEnumeration.push({
                     objectName: objectName,
                     properties: {
-                        show: this.barChartSettings.enableAxis.show,
-                        fill: this.barChartSettings.enableAxis.fill,
+                        show: this.projectTimelineSettings.milestonesMarkPhases.show
                     },
                     selector: null
                 });
                 break;
-            case 'colorSelector':
-                for (let barDataPoint of this.barDataPoints) {
-                    objectEnumeration.push({
-                        objectName: objectName,
-                        displayName: barDataPoint.category,
-                        properties: {
-                            fill: {
-                                solid: {
-                                    color: barDataPoint.color
-                                }
-                            }
-                        },
-                        selector: barDataPoint.selectionId.getSelector()
-                    });
-                }
-                break;
-            case 'generalView':
-                objectEnumeration.push({
-                    objectName: objectName,
-                    properties: {
-                        opacity: this.barChartSettings.generalView.opacity,
-                        showHelpLink: this.barChartSettings.generalView.showHelpLink
-                    },
-                    validValues: {
-                        opacity: {
-                            numberRange: {
-                                min: 10,
-                                max: 100
-                            }
-                        }
-                    },
-                    selector: null
-                });
-                break;
-            case 'averageLine':
-                objectEnumeration.push({
-                    objectName: objectName,
-                    properties: {
-                        show: this.barChartSettings.averageLine.show,
-                        displayName: this.barChartSettings.averageLine.displayName,
-                        fill: this.barChartSettings.averageLine.fill,
-                        showDataLabel: this.barChartSettings.averageLine.showDataLabel
-                    },
-                    selector: null
-                });
-                break;
+            // case 'enableAxis':
+            //     objectEnumeration.push({
+            //         objectName: objectName,
+            //         properties: {
+            //             show: this.barChartSettings.enableAxis.show,
+            //             fill: this.barChartSettings.enableAxis.fill,
+            //         },
+            //         selector: null
+            //     });
+            //     break;
+            // case 'colorSelector':
+            //     for (let barDataPoint of this.barDataPoints) {
+            //         objectEnumeration.push({
+            //             objectName: objectName,
+            //             displayName: barDataPoint.category,
+            //             properties: {
+            //                 fill: {
+            //                     solid: {
+            //                         color: barDataPoint.color
+            //                     }
+            //                 }
+            //             },
+            //             selector: barDataPoint.selectionId.getSelector()
+            //         });
+            //     }
+            //     break;
+            // case 'generalView':
+            //     objectEnumeration.push({
+            //         objectName: objectName,
+            //         properties: {
+            //             opacity: this.barChartSettings.generalView.opacity,
+            //             showHelpLink: this.barChartSettings.generalView.showHelpLink
+            //         },
+            //         validValues: {
+            //             opacity: {
+            //                 numberRange: {
+            //                     min: 10,
+            //                     max: 100
+            //                 }
+            //             }
+            //         },
+            //         selector: null
+            //     });
+            //     break;
+            // case 'averageLine':
+            //     objectEnumeration.push({
+            //         objectName: objectName,
+            //         properties: {
+            //             show: this.barChartSettings.averageLine.show,
+            //             displayName: this.barChartSettings.averageLine.displayName,
+            //             fill: this.barChartSettings.averageLine.fill,
+            //             showDataLabel: this.barChartSettings.averageLine.showDataLabel
+            //         },
+            //         selector: null
+            //     });
+            //     break;
         };
 
         return objectEnumeration;
@@ -519,15 +485,15 @@ export class ProjectTimeline implements IVisual {
         // Perform any cleanup tasks here
     }
 
-    private getTooltipData(value: any): VisualTooltipDataItem[] {
-        let language = getLocalizedString(this.locale, "LanguageKey");
-        return [{
-            displayName: value.category,
-            value: value.value.toString(),
-            color: value.color,
-            header: language && "displayed language " + language
-        }];
-    }
+    // private getTooltipData(value: any): VisualTooltipDataItem[] {
+    //     let language = getLocalizedString(this.locale, "LanguageKey");
+    //     return [{
+    //         displayName: value.category,
+    //         value: value.value.toString(),
+    //         color: value.color,
+    //         header: language && "displayed language " + language
+    //     }];
+    // }
 
     private createHelpLinkElement(): Element {
         let linkElement = document.createElement("a");
@@ -604,42 +570,42 @@ export class ProjectTimeline implements IVisual {
             .attr('id', 'averageLineLabel');
     }
 
-    private handleAverageLineUpdate(height: number, width: number, yScale: ScaleLinear<number, number>) {
-        let average = this.calculateAverage();
-        let fontSize = Math.min(height, width) * BarChart.Config.xAxisFontMultiplier;
-        let chosenColor = this.getColorValue(this.barChartSettings.averageLine.fill);
-        // If there's no room to place lable above line, place it below
-        let labelYOffset = fontSize * ((yScale(average) > fontSize * 1.5) ? -0.5 : 1.5);
+    // private handleAverageLineUpdate(height: number, width: number, yScale: ScaleLinear<number, number>) {
+    //     let average = this.calculateAverage();
+    //     let fontSize = Math.min(height, width) * BarChart.Config.xAxisFontMultiplier;
+    //     let chosenColor = this.getColorValue(this.barChartSettings.averageLine.fill);
+    //     // If there's no room to place lable above line, place it below
+    //     let labelYOffset = fontSize * ((yScale(average) > fontSize * 1.5) ? -0.5 : 1.5);
 
-        this.averageLine
-            .style("font-size", fontSize)
-            .style("display", (this.barChartSettings.averageLine.show) ? "initial" : "none")
-            .attr("transform", "translate(0, " + Math.round(yScale(average)) + ")");
+    //     this.averageLine
+    //         .style("font-size", fontSize)
+    //         .style("display", (this.barChartSettings.averageLine.show) ? "initial" : "none")
+    //         .attr("transform", "translate(0, " + Math.round(yScale(average)) + ")");
 
-        this.averageLine.select("#averageLine")
-            .style("stroke", chosenColor)
-            .style("stroke-width", "3px")
-            .style("stroke-dasharray", "6,6")
-            .attr("x1", 0)
-            .attr("x1", "" + width);
+    //     this.averageLine.select("#averageLine")
+    //         .style("stroke", chosenColor)
+    //         .style("stroke-width", "3px")
+    //         .style("stroke-dasharray", "6,6")
+    //         .attr("x1", 0)
+    //         .attr("x1", "" + width);
 
-        this.averageLine.select("#averageLineLabel")
-            .text("Average: " + average.toFixed(2))
-            .attr("transform", "translate(0, " + labelYOffset + ")")
-            .style("fill", this.barChartSettings.averageLine.showDataLabel ? chosenColor : "none");
-    }
+    //     this.averageLine.select("#averageLineLabel")
+    //         .text("Average: " + average.toFixed(2))
+    //         .attr("transform", "translate(0, " + labelYOffset + ")")
+    //         .style("fill", this.barChartSettings.averageLine.showDataLabel ? chosenColor : "none");
+    // }
 
-    private calculateAverage(): number {
-        if (this.barDataPoints.length === 0) {
-            return 0;
-        }
+    // private calculateAverage(): number {
+    //     if (this.barDataPoints.length === 0) {
+    //         return 0;
+    //     }
 
-        let total = 0;
+    //     let total = 0;
 
-        this.barDataPoints.forEach((value: BarChartDataPoint) => {
-            total += <number>value.value;
-        });
+    //     this.barDataPoints.forEach((value: BarChartDataPoint) => {
+    //         total += <number>value.value;
+    //     });
 
-        return total / this.barDataPoints.length;
-    }
+    //     return total / this.barDataPoints.length;
+    // }
 }

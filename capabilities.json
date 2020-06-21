@@ -1,12 +1,12 @@
 {
     "dataRoles": [
         {
-            "displayName": "Project",
+            "displayName": "Project Name",
             "name": "project",
             "kind": "Grouping"
         },
         {
-            "displayName": "Start Date",
+            "displayName": "PM Assign Date",
             "name": "startDate",
             "kind": "Measure"
         },
@@ -16,13 +16,28 @@
             "kind": "Measure"
         },
         {
-            "displayName": "Measure Data",
-            "name": "measure",
+            "displayName": "Deal Sign",
+            "name": "dealSign",
             "kind": "Measure"
         },
         {
-            "displayName": "Tooltips",
-            "name": "Tooltips",
+            "displayName": "Pens Down",
+            "name": "pensDown",
+            "kind": "Measure"
+        },
+        {
+            "displayName": "Deal Close/Day 1",
+            "name": "dealClose",
+            "kind": "Measure"
+        },
+        {
+            "displayName": "Day 2",
+            "name": "dayTwo",
+            "kind": "Measure"
+        },
+        {
+            "displayName": "Transition to Sustaining",
+            "name": "transition",
             "kind": "Measure"
         }
     ],
@@ -57,6 +72,15 @@
         }
     ],
     "objects": {
+        "milestonesMarkPhases": {
+            "displayName": "Milestones Mark Phases",
+            "properties": {
+                "show": {
+                    "displayName": "Milestones Mark Phases",
+                    "type": { "bool": false }
+                }
+            }
+        },
         "enableAxis": {
             "displayName": "Enable Axis",
             "properties": {

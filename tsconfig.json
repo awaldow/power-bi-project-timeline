@@ -11,6 +11,7 @@
       "declaration": true
     },
     "files": [
-      "src/barChart.ts"
+      "src/barChart.ts",
+      "src/projectTimeline.ts"
     ]
   }
