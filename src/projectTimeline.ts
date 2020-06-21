@@ -249,7 +249,7 @@ export class ProjectTimeline implements IVisual {
 
         this.svg = d3Select(options.element)
             .append('svg')
-            .classed('barChart', true);
+            .classed('projectTimeline', true);
 
         this.projectContainer = this.svg
             .append('g')
@@ -259,14 +259,14 @@ export class ProjectTimeline implements IVisual {
             .append('g')
             .classed('xAxis', true);
 
-        this.initAverageLine();
+        // this.initAverageLine();
 
-        const helpLinkElement: Element = this.createHelpLinkElement();
-        options.element.appendChild(helpLinkElement);
+        // const helpLinkElement: Element = this.createHelpLinkElement();
+        // options.element.appendChild(helpLinkElement);
 
-        this.helpLinkElement = d3Select(helpLinkElement);
+        // this.helpLinkElement = d3Select(helpLinkElement);
 
-        this.handleContextMenu();
+        // this.handleContextMenu();
     }
 
     public update(options: VisualUpdateOptions) {
@@ -286,6 +286,7 @@ export class ProjectTimeline implements IVisual {
 
         this.xAxis
             .style("font-size", Math.min(height, width) * ProjectTimeline.Config.xAxisFontMultiplier)
+            .style("fille", "#000000");
         //.style("fill", settings.enableAxis.fill);
 
         // let yScale = scaleLinear()
@@ -300,12 +301,12 @@ export class ProjectTimeline implements IVisual {
         this.xAxis.attr('transform', 'translate(0, ' + height + ')')
             .call(xAxis);
 
-        const textNodes = this.xAxis.selectAll("text")
+        // const textNodes = this.xAxis.selectAll("text")
         //ProjectTimeline.wordBreak(textNodes, xScale.bandwidth(), height);
 
-        this.projectSelection = this.projectContainer
-            .selectAll('.project')
-            .data(this.projects);
+        // this.projectSelection = this.projectContainer
+        //     .selectAll('.project')
+        //     .data(this.projects);
     }
 
     // private handleClick(barSelection: d3.Selection<d3.BaseType, any, d3.BaseType, any>) {

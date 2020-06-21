@@ -6,6 +6,11 @@
             "kind": "Grouping"
         },
         {
+            "displayName": "Milestones",
+            "name": "milestones",
+            "kind": "Measure"
+        },
+        {
             "displayName": "PM Assign Date",
             "name": "startDate",
             "kind": "Measure"
