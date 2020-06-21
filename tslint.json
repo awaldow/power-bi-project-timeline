@@ -5,12 +5,5 @@
     ],
     "rules": {
         "no-relative-imports": false
-    },
-    "compilerOptions": {
-        "jsx": "react",
-        "types": [
-            "react",
-            "react-dom"
-        ]
     }
 }
