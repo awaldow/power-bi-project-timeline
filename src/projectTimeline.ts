@@ -270,6 +270,7 @@ export class ProjectTimeline implements IVisual {
     }
 
     public update(options: VisualUpdateOptions) {
+        debugger;
         let viewModel: ProjectTimelineViewModel = visualTransform(options, this.host);
         let settings = this.projectTimelineSettings = viewModel.settings;
         this.projects = viewModel.projects;
