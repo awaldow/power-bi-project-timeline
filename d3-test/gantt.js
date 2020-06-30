@@ -81,14 +81,14 @@ d3.gantt = function () {
     svg.selectAll(".chart")
       .data(projects, keyFunction).enter()
       .append("rect")
-      .attr("rx", 5)
-      .attr("ry", 5)
+      .attr("rx", 0)
+      .attr("ry", 0)
       .attr("class", function (d) {
         return "bar";
       })
-      .attr("y", 0)
+      .attr("y", (height / (projects.length * 2)) - margin.top)
       .attr("transform", rectTransform)
-      .attr("height", function (d) { return 70; })
+      .attr("height", function (d) { return 20; })
       .attr("width", function (d) {
         return (x(d.endDate) - x(d.pmAssignDate));
       });
@@ -176,13 +176,6 @@ d3.gantt = function () {
     if (!arguments.length)
       return projects;
     projects = value;
-    return gantt;
-  };
-
-  gantt.taskStatus = function (value) {
-    if (!arguments.length)
-      return taskStatus;
-    taskStatus = value;
     return gantt;
   };
 
