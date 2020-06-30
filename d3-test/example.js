@@ -17,7 +17,7 @@ var projects = [
     {
         projectName: "eASIC",
         pmAssignDate: new Date("2/2/2018"),
-        endDate: new Date(""),
+        endDate: new Date(),
         milestones: [
             {
                 milestoneType: "Deal Sign",

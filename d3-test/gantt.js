@@ -20,7 +20,7 @@ d3.gantt = function () {
 
   var keyFunction = function (d) {
     //return d.startDate + d.taskName + d.endDate;
-    return d.projectName;
+    return d.pmAssignDate + d.projectName + d.endDate;
   };
 
   var rectTransform = function (d) {
@@ -34,9 +34,7 @@ d3.gantt = function () {
   var initTimeDomain = function () {
     if (timeDomainMode === FIT_TIME_DOMAIN_MODE) {
       if (projects === undefined || projects.length < 1) {
-        //timeDomainStart = d3.timeDay.offset(new Date(), -3);
         timeDomainStart = d3.timeMonth.offset(new Date(), -36);
-        //timeDomainEnd = d3.timeHour.offset(new Date(), +3);
         timeDomainEnd = d3.timeMonth.offset(new Date(), -18);
         return;
       }
@@ -92,7 +90,7 @@ d3.gantt = function () {
       .attr("transform", rectTransform)
       .attr("height", function (d) { return 70; })
       .attr("width", function (d) {
-        return (x(d.endDate) - x(d.startDate));
+        return (x(d.endDate) - x(d.pmAssignDate));
       });
 
     svg.append("g")
@@ -129,14 +127,14 @@ d3.gantt = function () {
       .attr("transform", rectTransform)
       .attr("height", function (d) { return y.range()[1]; })
       .attr("width", function (d) {
-        return (x(d.endDate) - x(d.startDate));
+        return (x(d.endDate) - x(d.pmAssignDate));
       });
 
     rect.transition()
       .attr("transform", rectTransform)
       .attr("height", function (d) { return y.range()[1]; })
       .attr("width", function (d) {
-        return (x(d.endDate) - x(d.startDate));
+        return (x(d.endDate) - x(d.pmAssignDate));
       });
 
     rect.exit().remove();
