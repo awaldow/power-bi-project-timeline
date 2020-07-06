@@ -20,7 +20,8 @@ html,body,#wrapper {
 }
  
 .label {
-
+	font-size: 10px;
+	font-family: Arial, sans-serif;
 }
 
 .bar {

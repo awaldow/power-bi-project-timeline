@@ -25,6 +25,7 @@ d3.gantt = function () {
 
   var rectTransform = function (d) {
     return "translate(" + x(d.pmAssignDate) + "," + y(d.projectName) + ")";
+    //return "translate(" + x(d.pmAssignDate) + "," + 20 + ")";
   };
 
   var x, y, xAxis, yAxis;
@@ -55,7 +56,8 @@ d3.gantt = function () {
   function initAxis() {
     x = d3.scaleTime().domain([timeDomainStart, timeDomainEnd]).range([0, width]).clamp(true);
 
-    y = d3.scaleBand().domain(projects.map(p => p.projectName)).rangeRound([0, height - margin.top - margin.bottom], .1);
+    //y = d3.scaleBand().domain(projects.map(p => p.projectName)).rangeRound([0, height - margin.top - margin.bottom], .1);
+    y = d3.scaleOrdinal().domain([0, projects.length]).range([0, projects.length * 20]);
 
     xAxis = d3.axisTop().scale(x).tickFormat(d3.timeFormat(tickFormat))
       .tickSize(8).ticks(10);
@@ -86,7 +88,8 @@ d3.gantt = function () {
       .attr("class", function (d) {
         return "bar";
       })
-      .attr("y", (height / (projects.length * 2)) - margin.top)
+      //.attr("y", (height / (projects.length * 2)) - margin.top)
+      .attr("y", 20)
       .attr("transform", rectTransform)
       .attr("height", function (d) { return 20; })
       .attr("width", function (d) {
@@ -99,7 +102,8 @@ d3.gantt = function () {
       .attr("class", "label")
       .attr("transform", rectTransform)
       .attr("x", -40)
-      .attr("y", (height / (projects.length * 2)) - margin.top + 4)
+      //.attr("y", (height / (projects.length * 2)) - margin.top + 4)
+      .attr("y", 25)
       .attr("dy", ".75em")
       .text(function (d) { return d.projectName });
 
