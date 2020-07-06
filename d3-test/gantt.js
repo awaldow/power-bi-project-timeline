@@ -8,8 +8,8 @@ d3.gantt = function () {
     bottom: 20,
     left: 150
   };
-  var timeDomainStart = d3.timeMonth.offset(new Date(), -36);
-  var timeDomainEnd = d3.timeMonth.offset(new Date(), -18);
+  var timeDomainStart = d3.timeMonth.offset(new Date(), -40);
+  var timeDomainEnd = d3.timeMonth.offset(new Date(), -14);
   var timeDomainMode = FIT_TIME_DOMAIN_MODE;// fixed or fit
   var projects = [];
   var taskStatus = [];
@@ -34,21 +34,21 @@ d3.gantt = function () {
   var initTimeDomain = function () {
     if (timeDomainMode === FIT_TIME_DOMAIN_MODE) {
       if (projects === undefined || projects.length < 1) {
-        timeDomainStart = d3.timeMonth.offset(new Date(), -36);
-        timeDomainEnd = d3.timeMonth.offset(new Date(), -18);
+        timeDomainStart = d3.timeMonth.offset(new Date(), -40);
+        timeDomainEnd = d3.timeMonth.offset(new Date(), -14);
         return;
       }
       projects.sort(function (a, b) {
         return a.endDate - b.endDate;
       });
-      timeDomainEnd = projects[projects.length - 1].endDate;
+      timeDomainEnd = d3.timeMonth.offset(projects[projects.length - 1].endDate, 2);
       if (isNaN(timeDomainEnd)) {
         timeDomainEnd = new Date();
       }
       projects.sort(function (a, b) {
         return a.pmAssignDate - b.pmAssignDate;
       });
-      timeDomainStart = projects[0].pmAssignDate;
+      timeDomainStart = d3.timeMonth.offset(projects[0].pmAssignDate, -2);
     }
   };
 
@@ -92,6 +92,16 @@ d3.gantt = function () {
       .attr("width", function (d) {
         return (x(d.endDate) - x(d.pmAssignDate));
       });
+
+    svg.selectAll(".text")
+      .data(projects).enter()
+      .append("text")
+      .attr("class", "label")
+      .attr("transform", rectTransform)
+      .attr("x", -40)
+      .attr("y", (height / (projects.length * 2)) - margin.top + 4)
+      .attr("dy", ".75em")
+      .text(function (d) { return d.projectName });
 
     svg.append("g")
       .attr("class", "x axis")
