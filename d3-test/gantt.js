@@ -49,7 +49,7 @@ d3.gantt = function () {
       projects.sort(function (a, b) {
         return a.pmAssignDate - b.pmAssignDate;
       });
-      timeDomainStart = d3.timeMonth.offset(projects[0].pmAssignDate, -2);
+      timeDomainStart = d3.timeMonth.offset(projects[0].pmAssignDate, -5);
     }
   };
 
@@ -101,11 +101,11 @@ d3.gantt = function () {
       .append("text")
       .attr("class", "label")
       .attr("transform", rectTransform)
-      .attr("x", -40)
+      .attr("x", -80)
       //.attr("y", (height / (projects.length * 2)) - margin.top + 4)
       .attr("y", 25)
       .attr("dy", ".75em")
-      .text(function (d) { return d.projectName });
+      .text(function (d) { return d.projectName + ", " + d.pmAssignDate.toLocaleDateString("en-US") });
 
     svg.append("g")
       .attr("class", "x axis")
