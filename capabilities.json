@@ -6,6 +6,16 @@
             "kind": "Grouping"
         },
         {
+            "displayName": "PM Assign Date",
+            "name": "pmAssign",
+            "kind": "Grouping"
+        },
+        {
+            "displayName": "End Date",
+            "name": "endDate",
+            "kind": "Grouping"
+        },
+        {
             "displayName": "Milestones",
             "name": "milestones",
             "kind": "Grouping"
@@ -19,6 +29,16 @@
                         {
                             "for": {
                                 "in": "project"
+                            }
+                        },
+                        {
+                            "for": {
+                                "in": "pmAssign"
+                            }
+                        },
+                        {
+                            "for": {
+                                "in": "endDate"
                             }
                         },
                         {

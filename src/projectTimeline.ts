@@ -1,6 +1,7 @@
 import "./../style/visual.less";
 import { event as d3Event, select as d3Select } from "d3-selection";
 import { scaleLinear, scaleBand, scaleTime, scaleOrdinal } from "d3-scale";
+import { timeMonth } from 'd3-time';
 import { timeFormat } from 'd3-time-format';
 
 
@@ -116,7 +117,7 @@ function visualTransform(
   host: IVisualHost
 ): ProjectTimelineViewModel {
   /*Convert dataView to your viewModel*/
-  debugger;
+  //debugger;
   let dataViews = options.dataViews;
   let defaultSettings: ProjectTimelineSettings = {
     milestonesMarkPhases: {
@@ -166,14 +167,26 @@ function visualTransform(
       endDate: new Date(),
       milestones: [],
     };
-    for (let j = 1; (len = dataViews[0].table.columns.length); i++) {
+    for (let j = 1; j < dataViews[0].table.columns.length; j++) {
       let milestone: Milestone = {
         milestoneType: dataViews[0].table.columns[j].displayName,
         milestoneDate: new Date(milestones[i][j].toString()),
       };
       project.milestones.push(milestone);
     }
+    let pmAssignDate = dataViews[0].table.columns.find(e => e.roles['pmAssign']).index;
+    if(pmAssignDate != null) {
+      project.pmAssignDate = new Date(milestones[i][pmAssignDate].toString());
+    }
+    let endDate = dataViews[0].table.columns.find(e => e.roles['endDate']).index;
+    if(endDate != null) {
+      project.endDate = new Date(milestones[i][endDate].toString());
+    }
+
     projects.push(project);
+  }
+  if(projects.length > 0) {
+    debugger;
   }
 
   return {
@@ -198,6 +211,7 @@ export class ProjectTimeline implements IVisual {
   private selectionManager: ISelectionManager;
   private projectContainer: Selection<SVGElement>;
   private xAxis: Selection<SVGElement>;
+  private yAxis: Selection<SVGElement>;
   private projects: ProjectTimelineRow[];
   private projectTimelineSettings: ProjectTimelineSettings;
   private tooltipServiceWrapper: ITooltipServiceWrapper;
@@ -247,9 +261,11 @@ export class ProjectTimeline implements IVisual {
 
     this.projectContainer = this.svg
       .append("g")
+      .attr("transform", "translate(0, 20)")
       .classed("projectContainer", true);
 
-    this.xAxis = this.svg.append("g").classed("xAxis", true);
+    this.xAxis = this.projectContainer.append("g").attr("class", "x axis").classed("xAxis", true);
+    this.yAxis = this.projectContainer.append("g").attr("class", "y axis").classed("yAxis", true);
 
     // this.initAverageLine();
 
@@ -262,13 +278,15 @@ export class ProjectTimeline implements IVisual {
   }
 
   public update(options: VisualUpdateOptions) {
-    debugger;
     let viewModel: ProjectTimelineViewModel = visualTransform(
       options,
       this.host
     );
     let settings = (this.projectTimelineSettings = viewModel.settings);
     this.projects = viewModel.projects;
+    if(this.projects.length > 0) {
+      debugger;
+    }
 
     // Turn on landing page in capabilities and remove comment to turn on landing page!
     // this.HandleLandingPage(options);
@@ -277,13 +295,6 @@ export class ProjectTimeline implements IVisual {
     let height = options.viewport.height;
 
     this.svg.attr("width", width).attr("height", height);
-
-    this.xAxis
-      .style(
-        "font-size",
-        Math.min(height, width) * ProjectTimeline.Config.xAxisFontMultiplier
-      )
-      .style("fill", "#000000");
     //.style("fill", settings.enableAxis.fill);
 
     // let yScale = scaleLinear()
@@ -292,15 +303,20 @@ export class ProjectTimeline implements IVisual {
     let y = scaleBand().domain(this.projects.map(p => p.projectName)).range([0, this.projects.length * 50]);
     //let yScale = scaleOrdinal().domain(this.projects.map(p => p.projectName)).range([0, this.projects.length]);
 
+    let timeDomainStart = timeMonth.offset(this.firstStartDate(this.projects), -5);
+    let timeDomainEnd = timeMonth.offset(this.lastEndDate(this.projects), 2);
+
     let x = scaleTime()
       .domain([
-        this.firstStartDate(viewModel.projects),
-        this.lastEndDate(viewModel.projects),
+        timeDomainStart,
+        timeDomainEnd,
       ])
-      .rangeRound([0, width]);
+      .rangeRound([0, width]).nice();
 
     let xAxis = axisTop(x).tickFormat(timeFormat(this.tickFormat)).tickSize(8).ticks(10);
     let yAxis = axisLeft(y).tickSize(0);
+    this.xAxis.call(xAxis);
+    this.yAxis.call(yAxis);
 
     //let yAxis = axisLeft(yScale);
 
@@ -318,15 +334,15 @@ export class ProjectTimeline implements IVisual {
       return "translate(" + x(d.pmAssignDate) + "," + y(d.projectName) + ")";
     };
 
-    this.svg.selectAll(".chart")
-      .data(projects, keyFunction).enter()
+    this.projectContainer.selectAll(".bar").remove();
+    this.projectContainer.selectAll(".chart")
+      .data(this.projects, keyFunction).enter()
       .append("rect")
       .attr("rx", 0)
       .attr("ry", 0)
       .attr("class", function (d) {
         return "bar";
       })
-      //.attr("y", (height / (projects.length * 2)) - margin.top)
       .attr("y", 20)
       .attr("transform", rectTransform)
       .attr("height", function (d) { return 20; })
@@ -334,13 +350,13 @@ export class ProjectTimeline implements IVisual {
         return (x(d.endDate) - x(d.pmAssignDate));
       });
 
-    this.svg.selectAll(".text")
-      .data(projects).enter()
+    this.projectContainer.selectAll(".label").remove();
+    this.projectContainer.selectAll(".text")
+      .data(this.projects).enter()
       .append("text")
       .attr("class", "label")
       .attr("transform", rectTransform)
       .attr("x", -80)
-      //.attr("y", (height / (projects.length * 2)) - margin.top + 4)
       .attr("y", 25)
       .text(function (d) { return d.projectName })
       .append("tspan")
@@ -349,35 +365,6 @@ export class ProjectTimeline implements IVisual {
       .attr("x", -80)
       .attr("y", 40)
       .text(function (d) { return d.pmAssignDate.toLocaleDateString("en-US") });
-  }
-
-  // private handleClick(barSelection: d3.Selection<d3.BaseType, any, d3.BaseType, any>) {
-  //     // Clear selection when clicking outside a bar
-  //     this.svg.on('click', (d) => {
-  //         if (this.host.allowInteractions) {
-  //             this.selectionManager
-  //                 .clear()
-  //                 .then(() => {
-  //                     this.syncSelectionState(barSelection, []);
-  //                 });
-  //         }
-  //     });
-  // }
-
-  private handleContextMenu() {
-    this.svg.on("contextmenu", () => {
-      const mouseEvent: MouseEvent = getEvent();
-      const eventTarget: EventTarget = mouseEvent.target;
-      let dataPoint: any = d3Select(<d3.BaseType>eventTarget).datum();
-      this.selectionManager.showContextMenu(
-        dataPoint ? dataPoint.selectionId : {},
-        {
-          x: mouseEvent.clientX,
-          y: mouseEvent.clientY,
-        }
-      );
-      mouseEvent.preventDefault();
-    });
   }
 
   private firstStartDate(projects: ProjectTimelineRow[]): Date {
@@ -392,51 +379,6 @@ export class ProjectTimeline implements IVisual {
       null,
       projects.map((p) => p.endDate)
     );
-  }
-
-  // private syncSelectionState(
-  //     selection: Selection<BarChartDataPoint>,
-  //     selectionIds: ISelectionId[]
-  // ): void {
-  //     if (!selection || !selectionIds) {
-  //         return;
-  //     }
-
-  //     if (!selectionIds.length) {
-  //         const opacity: number = this.barChartSettings.generalView.opacity / 100;
-  //         selection
-  //             .style("fill-opacity", opacity)
-  //             .style("stroke-opacity", opacity);
-
-  //         return;
-  //     }
-
-  //     const self: this = this;
-
-  //     selection.each(function (barDataPoint: BarChartDataPoint) {
-  //         const isSelected: boolean = self.isSelectionIdInArray(selectionIds, barDataPoint.selectionId);
-
-  //         const opacity: number = isSelected
-  //             ? BarChart.Config.solidOpacity
-  //             : BarChart.Config.transparentOpacity;
-
-  //         d3Select(this)
-  //             .style("fill-opacity", opacity)
-  //             .style("stroke-opacity", opacity);
-  //     });
-  // }
-
-  private isSelectionIdInArray(
-    selectionIds: ISelectionId[],
-    selectionId: ISelectionId
-  ): boolean {
-    if (!selectionIds || !selectionId) {
-      return false;
-    }
-
-    return selectionIds.some((currentSelectionId: ISelectionId) => {
-      return currentSelectionId.includes(selectionId);
-    });
   }
 
   /**
@@ -469,197 +411,12 @@ export class ProjectTimeline implements IVisual {
           selector: null,
         });
         break;
-      // case 'enableAxis':
-      //     objectEnumeration.push({
-      //         objectName: objectName,
-      //         properties: {
-      //             show: this.barChartSettings.enableAxis.show,
-      //             fill: this.barChartSettings.enableAxis.fill,
-      //         },
-      //         selector: null
-      //     });
-      //     break;
-      // case 'colorSelector':
-      //     for (let barDataPoint of this.barDataPoints) {
-      //         objectEnumeration.push({
-      //             objectName: objectName,
-      //             displayName: barDataPoint.category,
-      //             properties: {
-      //                 fill: {
-      //                     solid: {
-      //                         color: barDataPoint.color
-      //                     }
-      //                 }
-      //             },
-      //             selector: barDataPoint.selectionId.getSelector()
-      //         });
-      //     }
-      //     break;
-      // case 'generalView':
-      //     objectEnumeration.push({
-      //         objectName: objectName,
-      //         properties: {
-      //             opacity: this.barChartSettings.generalView.opacity,
-      //             showHelpLink: this.barChartSettings.generalView.showHelpLink
-      //         },
-      //         validValues: {
-      //             opacity: {
-      //                 numberRange: {
-      //                     min: 10,
-      //                     max: 100
-      //                 }
-      //             }
-      //         },
-      //         selector: null
-      //     });
-      //     break;
-      // case 'averageLine':
-      //     objectEnumeration.push({
-      //         objectName: objectName,
-      //         properties: {
-      //             show: this.barChartSettings.averageLine.show,
-      //             displayName: this.barChartSettings.averageLine.displayName,
-      //             fill: this.barChartSettings.averageLine.fill,
-      //             showDataLabel: this.barChartSettings.averageLine.showDataLabel
-      //         },
-      //         selector: null
-      //     });
-      //     break;
     }
 
     return objectEnumeration;
   }
 
-  /**
-   * Destroy runs when the visual is removed. Any cleanup that the visual needs to
-   * do should be done here.
-   *
-   * @function
-   */
   public destroy(): void {
     // Perform any cleanup tasks here
   }
-
-  // private getTooltipData(value: any): VisualTooltipDataItem[] {
-  //     let language = getLocalizedString(this.locale, "LanguageKey");
-  //     return [{
-  //         displayName: value.category,
-  //         value: value.value.toString(),
-  //         color: value.color,
-  //         header: language && "displayed language " + language
-  //     }];
-  // }
-
-  private createHelpLinkElement(): Element {
-    let linkElement = document.createElement("a");
-    linkElement.textContent = "?";
-    linkElement.setAttribute("title", "Open documentation");
-    linkElement.setAttribute("class", "helpLink");
-    linkElement.addEventListener("click", () => {
-      this.host.launchUrl(
-        "https://microsoft.github.io/PowerBI-visuals/tutorials/building-bar-chart/adding-url-launcher-element-to-the-bar-chart/"
-      );
-    });
-    return linkElement;
-  }
-
-  private handleLandingPage(options: VisualUpdateOptions) {
-    if (!options.dataViews || !options.dataViews.length) {
-      if (!this.isLandingPageOn) {
-        this.isLandingPageOn = true;
-        const SampleLandingPage: Element = this.createSampleLandingPage();
-        this.element.appendChild(SampleLandingPage);
-
-        this.LandingPage = d3Select(SampleLandingPage);
-      }
-    } else {
-      if (this.isLandingPageOn && !this.LandingPageRemoved) {
-        this.LandingPageRemoved = true;
-        this.LandingPage.remove();
-      }
-    }
-  }
-
-  private createSampleLandingPage(): Element {
-    let div = document.createElement("div");
-
-    let header = document.createElement("h1");
-    header.textContent = "Sample Bar Chart Landing Page";
-    header.setAttribute("class", "LandingPage");
-    let p1 = document.createElement("a");
-    p1.setAttribute("class", "LandingPageHelpLink");
-    p1.textContent = "Learn more about Landing page";
-
-    p1.addEventListener("click", () => {
-      this.host.launchUrl(
-        "https://microsoft.github.io/PowerBI-visuals/docs/overview/"
-      );
-    });
-
-    div.appendChild(header);
-    div.appendChild(p1);
-
-    return div;
-  }
-
-  private getColorValue(color: Fill | string): string {
-    // Override color settings if in high contrast mode
-    if (this.host.colorPalette.isHighContrast) {
-      return this.host.colorPalette.foreground.value;
-    }
-
-    // If plain string, just return it
-    if (typeof color === "string") {
-      return color;
-    }
-    // Otherwise, extract string representation from Fill type object
-    return color.solid.color;
-  }
-
-  private initAverageLine() {
-    this.averageLine = this.svg.append("g").classed("averageLine", true);
-
-    this.averageLine.append("line").attr("id", "averageLine");
-
-    this.averageLine.append("text").attr("id", "averageLineLabel");
-  }
-
-  // private handleAverageLineUpdate(height: number, width: number, yScale: ScaleLinear<number, number>) {
-  //     let average = this.calculateAverage();
-  //     let fontSize = Math.min(height, width) * BarChart.Config.xAxisFontMultiplier;
-  //     let chosenColor = this.getColorValue(this.barChartSettings.averageLine.fill);
-  //     // If there's no room to place lable above line, place it below
-  //     let labelYOffset = fontSize * ((yScale(average) > fontSize * 1.5) ? -0.5 : 1.5);
-
-  //     this.averageLine
-  //         .style("font-size", fontSize)
-  //         .style("display", (this.barChartSettings.averageLine.show) ? "initial" : "none")
-  //         .attr("transform", "translate(0, " + Math.round(yScale(average)) + ")");
-
-  //     this.averageLine.select("#averageLine")
-  //         .style("stroke", chosenColor)
-  //         .style("stroke-width", "3px")
-  //         .style("stroke-dasharray", "6,6")
-  //         .attr("x1", 0)
-  //         .attr("x1", "" + width);
-
-  //     this.averageLine.select("#averageLineLabel")
-  //         .text("Average: " + average.toFixed(2))
-  //         .attr("transform", "translate(0, " + labelYOffset + ")")
-  //         .style("fill", this.barChartSettings.averageLine.showDataLabel ? chosenColor : "none");
-  // }
-
-  // private calculateAverage(): number {
-  //     if (this.barDataPoints.length === 0) {
-  //         return 0;
-  //     }
-
-  //     let total = 0;
-
-  //     this.barDataPoints.forEach((value: BarChartDataPoint) => {
-  //         total += <number>value.value;
-  //     });
-
-  //     return total / this.barDataPoints.length;
-  // }
 }
