@@ -53,7 +53,7 @@ d3.gantt = function () {
   function initAxis() {
     x = d3.scaleTime().domain([timeDomainStart, timeDomainEnd]).range([0, width]).clamp(true);
 
-    y = d3.scaleOrdinal().domain([0, projects.length]).range([0, projects.length * 20]);
+    y = d3.scaleBand().domain(projects.map(p => p.projectName)).range([0, projects.length * 50]);
 
     xAxis = d3.axisTop().scale(x).tickFormat(d3.timeFormat(tickFormat))
       .tickSize(8).ticks(10);

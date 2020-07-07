@@ -15,6 +15,21 @@ var projects = [
         ],
     },
     {
+        projectName: "MAVinci GmbH",
+        pmAssignDate: new Date("7/20/2016"),
+        endDate: new Date("12/18/2017"),
+        milestones: [
+            {
+                milestoneType: "Deal Sign",
+                milestoneDate: new Date("9/18/2016"),
+            },
+            {
+                milestoneType: "Deal Close/Day 1",
+                milestoneDate: new Date("11/13/2016"),
+            },
+        ],
+    },
+    {
         projectName: "eASIC",
         pmAssignDate: new Date("2/2/2018"),
         endDate: new Date(),
