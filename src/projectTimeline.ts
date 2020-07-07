@@ -1,6 +1,8 @@
 import "./../style/visual.less";
 import { event as d3Event, select as d3Select } from "d3-selection";
 import { scaleLinear, scaleBand, scaleTime, scaleOrdinal } from "d3-scale";
+import { timeFormat } from 'd3-time-format';
+
 
 import { axisBottom, axisTop, axisLeft } from "d3-axis";
 
@@ -167,8 +169,8 @@ function visualTransform(
     for (let j = 1; (len = dataViews[0].table.columns.length); i++) {
       let milestone: Milestone = {
         milestoneType: dataViews[0].table.columns[j].displayName,
-        milestoneDate: new Date(milestones[i][j].toString())
-      }
+        milestoneDate: new Date(milestones[i][j].toString()),
+      };
       project.milestones.push(milestone);
     }
     projects.push(project);
@@ -178,30 +180,6 @@ function visualTransform(
     projects,
     settings: projectTimelineSettings,
   };
-}
-
-function getColumnColorByIndex(
-  category: DataViewCategoryColumn,
-  index: number,
-  colorPalette: ISandboxExtendedColorPalette
-): string {
-  if (colorPalette.isHighContrast) {
-    return colorPalette.background.value;
-  }
-
-  const defaultColor: Fill = {
-    solid: {
-      color: colorPalette.getColor(`${category.values[index]}`).value,
-    },
-  };
-
-  return getCategoricalObjectValue<Fill>(
-    category,
-    index,
-    "colorSelector",
-    "fill",
-    defaultColor
-  ).solid.color;
 }
 
 function getColumnStrokeColor(
@@ -230,6 +208,7 @@ export class ProjectTimeline implements IVisual {
   private LandingPageRemoved: boolean;
   private LandingPage: Selection<any>;
   private averageLine: Selection<SVGElement>;
+  private tickFormat: string;
 
   private projectSelection: d3.Selection<d3.BaseType, any, d3.BaseType, any>;
 
@@ -247,6 +226,7 @@ export class ProjectTimeline implements IVisual {
   };
 
   constructor(options: VisualConstructorOptions) {
+    this.tickFormat = "%m/%d/%Y";
     this.host = options.host;
     this.element = options.element;
     this.selectionManager = options.host.createSelectionManager();
@@ -309,18 +289,18 @@ export class ProjectTimeline implements IVisual {
     // let yScale = scaleLinear()
     //     .domain([0, viewModel.dataMax])
     //     .range([height, 0]);
-
+    let y = scaleBand().domain(this.projects.map(p => p.projectName)).range([0, this.projects.length * 50]);
     //let yScale = scaleOrdinal().domain(this.projects.map(p => p.projectName)).range([0, this.projects.length]);
 
-    let xScale = scaleTime()
+    let x = scaleTime()
       .domain([
         this.firstStartDate(viewModel.projects),
         this.lastEndDate(viewModel.projects),
       ])
       .rangeRound([0, width]);
 
-    let xAxis = axisTop(xScale);
-    this.xAxis.attr("transform", "translate(0, " + height + ")").call(xAxis);
+    let xAxis = axisTop(x).tickFormat(timeFormat(this.tickFormat)).tickSize(8).ticks(10);
+    let yAxis = axisLeft(y).tickSize(0);
 
     //let yAxis = axisLeft(yScale);
 
@@ -330,6 +310,45 @@ export class ProjectTimeline implements IVisual {
     // this.projectSelection = this.projectContainer
     //     .selectAll('.project')
     //     .data(this.projects);
+    var keyFunction = function (d) {
+      return d.pmAssignDate + d.projectName + d.endDate;
+    };
+
+    var rectTransform = function (d) {
+      return "translate(" + x(d.pmAssignDate) + "," + y(d.projectName) + ")";
+    };
+
+    this.svg.selectAll(".chart")
+      .data(projects, keyFunction).enter()
+      .append("rect")
+      .attr("rx", 0)
+      .attr("ry", 0)
+      .attr("class", function (d) {
+        return "bar";
+      })
+      //.attr("y", (height / (projects.length * 2)) - margin.top)
+      .attr("y", 20)
+      .attr("transform", rectTransform)
+      .attr("height", function (d) { return 20; })
+      .attr("width", function (d) {
+        return (x(d.endDate) - x(d.pmAssignDate));
+      });
+
+    this.svg.selectAll(".text")
+      .data(projects).enter()
+      .append("text")
+      .attr("class", "label")
+      .attr("transform", rectTransform)
+      .attr("x", -80)
+      //.attr("y", (height / (projects.length * 2)) - margin.top + 4)
+      .attr("y", 25)
+      .text(function (d) { return d.projectName })
+      .append("tspan")
+      .attr("class", "label")
+      .attr("transform", rectTransform)
+      .attr("x", -80)
+      .attr("y", 40)
+      .text(function (d) { return d.pmAssignDate.toLocaleDateString("en-US") });
   }
 
   // private handleClick(barSelection: d3.Selection<d3.BaseType, any, d3.BaseType, any>) {
