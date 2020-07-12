@@ -177,6 +177,7 @@ d3.gantt = function () {
       .enter().append("image").attr("xlink:href", "svg/activeprogram.svg")
       .attr("transform", activeProgramTransform)
       .attr("display", function (d) { return !d.pensDown && d.activeProgram ? "" : "none" })
+      .attr("x", -10)
       .attr("y", 19)
       .attr("width", 24)
       .attr("height", 24);
@@ -185,6 +186,7 @@ d3.gantt = function () {
       .enter().append("image").attr("xlink:href", "svg/transitiontosustaining.svg")
       .attr("transform", transitionToSustainingTransform)
       .attr("display", function (d) { return !d.activeProgram && !d.pensDown ? "" : "none" })
+      .attr("x", -10)
       .attr("y", 19)
       .attr("width", 24)
       .attr("height", 24);
@@ -193,6 +195,7 @@ d3.gantt = function () {
       .enter().append("image").attr("xlink:href", "svg/pensdown-24px.svg")
       .attr("transform", pensDownTransform)
       .attr("display", function (d) { return d.pensDown ? "" : "none" })
+      .attr("x", -10)
       .attr("y", 19)
       .attr("width", 24)
       .attr("height", 24);
