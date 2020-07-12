@@ -57,6 +57,9 @@ interface ProjectTimelineRow {
   projectName: string;
   pmAssignDate: Date;
   endDate: Date;
+  dealSign: Date;
+  dealClose: Date;
+  day2: Date;
   milestones: Milestone[];
 }
 
@@ -70,30 +73,20 @@ let projects: ProjectTimelineRow[] = [
     projectName: "Altera",
     pmAssignDate: new Date("6/1/2015"),
     endDate: new Date("11/30/2018"),
+    dealSign: new Date("6/1/2015"),
+    dealClose: new Date("7/13/2015"),
+    day2: new Date("7/15/2018"),
     milestones: [
-      {
-        milestoneType: "Deal Sign",
-        milestoneDate: new Date("6/1/2015"),
-      },
-      {
-        milestoneType: "Deal Close/Day 1",
-        milestoneDate: new Date("7/13/2015"),
-      },
     ],
   },
   {
     projectName: "eASIC",
     pmAssignDate: new Date("2/2/2018"),
     endDate: new Date(""),
+    dealSign: new Date("8/7/2018"),
+    dealClose: new Date("9/9/2018"),
+    day2: new Date(""),
     milestones: [
-      {
-        milestoneType: "Deal Sign",
-        milestoneDate: new Date("8/7/2018"),
-      },
-      {
-        milestoneType: "Deal Close/Day 1",
-        milestoneDate: new Date("9/9/2018"),
-      },
     ],
   },
 ];
@@ -165,6 +158,9 @@ function visualTransform(
       projectName: milestones[i][0].toString(),
       pmAssignDate: new Date(),
       endDate: new Date(),
+      day2: new Date(),
+      dealClose: new Date(),
+      dealSign: new Date(),
       milestones: [],
     };
     for (let j = 1; j < dataViews[0].table.columns.length; j++) {
@@ -174,6 +170,7 @@ function visualTransform(
       };
       project.milestones.push(milestone);
     }
+    // TODO: Need to create a better way to get the right roled milestones out and into the project object
     let pmAssignDate = dataViews[0].table.columns.find(e => e.roles['pmAssign']).index;
     if(pmAssignDate != null) {
       project.pmAssignDate = new Date(milestones[i][pmAssignDate].toString());

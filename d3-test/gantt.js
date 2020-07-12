@@ -25,16 +25,28 @@ d3.gantt = function () {
     return "translate(" + x(d.pmAssignDate) + "," + y(d.projectName) + ")";
   };
 
-  var textTransform = function (d) {
-    return "translate(" + x(d.pmAssignDate) + "," + y(d.projectName) + ")";
-  }
-
   var dealsignTransform = function (d) {
-    return "translate(" + x(d.milestones.find(p => p.milestoneType == "Deal Sign").milestoneDate) + "," + y(d.projectName) + ")";
+    return "translate(" + x(d.dealSign) + "," + y(d.projectName) + ")";
   }
 
   var dealcloseTransform = function (d) {
-    return "translate(" + x(d.milestones.find(p => p.milestoneType == "Deal Close/Day 1").milestoneDate) + "," + y(d.projectName) + ")";
+    return "translate(" + x(d.dealClose) + "," + y(d.projectName) + ")";
+  }
+
+  var day2Transform = function (d) {
+    return "translate(" + x(d.day2) + "," + y(d.projectName) + ")";
+  }
+
+  var activeProgramTransform = function (d) {
+    return "translate(" + x(new Date()) + "," + y(d.projectName) + ")";
+  }
+
+  var transitionToSustainingTransform = function (d) {
+    return "translate(" + x(d.endDate) + "," + y(d.projectName) + ")";
+  }
+
+  var pensDownTransform = function (d) {
+    return "translate(" + x(d.endDate) + "," + y(d.projectName) + ")";
   }
 
   var x, y, xAxis, yAxis;
@@ -124,16 +136,51 @@ d3.gantt = function () {
       .data(projects)
       .enter().append("image").attr("xlink:href", "svg/dealsign-24px.svg")
       .attr("transform", dealsignTransform)
-      .attr("y", 19)
+      .attr("display", function (d) { return d.dealSign == null ? "none" : "" })
+      .attr("y", 18)
       .attr("width", 24)
       .attr("height", 24);
     svg.selectAll('.icon')
       .data(projects)
       .enter().append("image").attr("xlink:href", "svg/dealclose-day1.svg")
       .attr("transform", dealcloseTransform)
+      .attr("display", function (d) { return d.dealClose == null ? "none" : "" })
       .attr("y", 19)
       .attr("width", 24)
       .attr("height", 24);
+    svg.selectAll('.icon')
+      .data(projects)
+      .enter().append("image").attr("xlink:href", "svg/day2.svg")
+      .attr("transform", day2Transform)
+      .attr("display", function (d) { return d.day2 == null ? "none" : "" })
+      .attr("y", 19)
+      .attr("width", 24)
+      .attr("height", 24);
+    svg.selectAll('.icon')
+      .data(projects)
+      .enter().append("image").attr("xlink:href", "svg/activeprogram.svg")
+      .attr("transform", activeProgramTransform)
+      .attr("display", function (d) { return !d.pensDown && d.activeProgram ? "" : "none" })
+      .attr("y", 19)
+      .attr("width", 24)
+      .attr("height", 24);
+    svg.selectAll('.icon')
+      .data(projects)
+      .enter().append("image").attr("xlink:href", "svg/transitiontosustaining.svg")
+      .attr("transform", transitionToSustainingTransform)
+      .attr("display", function (d) { return !d.activeProgram && !d.pensDown ? "" : "none" })
+      .attr("y", 19)
+      .attr("width", 24)
+      .attr("height", 24);
+    svg.selectAll('.icon')
+      .data(projects)
+      .enter().append("image").attr("xlink:href", "svg/pensdown-24px.svg")
+      .attr("transform", pensDownTransform)
+      .attr("display", function (d) { return d.pensDown ? "" : "none" })
+      .attr("y", 19)
+      .attr("width", 24)
+      .attr("height", 24);
+
 
     svg.append("g")
       .attr("class", "x axis")
