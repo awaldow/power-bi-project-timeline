@@ -36,6 +36,11 @@
             "kind": "Grouping"
         },
         {
+            "displayName": "Error",
+            "name": "error",
+            "kind": "Grouping"
+        },
+        {
             "displayName": "Milestones",
             "name": "milestones",
             "kind": "Grouping"
@@ -79,6 +84,11 @@
                         {
                             "for": {
                                 "in": "pensDown"
+                            }
+                        },
+                        {
+                            "for": {
+                                "in": "error"
                             }
                         },
                         {

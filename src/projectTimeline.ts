@@ -187,35 +187,25 @@ function visualTransform(
   for (let i = 0, len = Math.max(milestones.length, 0); i < len; i++) {
     let project: ProjectTimelineRow = {
       projectName: milestones[i][0].toString(),
-      pmAssignDate: new Date(),
-      endDate: new Date(),
-      day2: new Date(),
-      dealClose: new Date(),
-      dealSign: new Date(),
+      pmAssignDate: null,
+      endDate: null,
+      day2: null,
+      dealClose: null,
+      dealSign: null,
       activeProgram: false,
       error: false,
       pensDown: false,
       milestones: [],
     };
-    for (let j = 1; j < dataViews[0].table.columns.length; j++) {
-      let milestone: Milestone = {
-        milestoneType: dataViews[0].table.columns[j].displayName,
-        milestoneDate: new Date(milestones[i][j].toString()),
-      };
-      project.milestones.push(milestone);
-    }
-    // TODO: Need to create a better way to get the right roled milestones out and into the project object
-    let pmAssignDate = dataViews[0].table.columns.find(
-      (e) => e.roles["pmAssign"]
-    ).index;
-    if (pmAssignDate != null) {
-      project.pmAssignDate = new Date(milestones[i][pmAssignDate].toString());
-    }
-    let endDate = dataViews[0].table.columns.find((e) => e.roles["endDate"])
-      .index;
-    if (endDate != null) {
-      project.endDate = new Date(milestones[i][endDate].toString());
-    }
+    // for (let j = 1; j < dataViews[0].table.columns.length; j++) {
+    //   let milestone: Milestone = {
+    //     milestoneType: dataViews[0].table.columns[j].displayName,
+    //     milestoneDate: new Date(milestones[i][j].toString()),
+    //   };
+    //   project.milestones.push(milestone);
+    // }
+
+    project = populateProjectWithRoles(project, milestones, i, dataViews);
 
     projects.push(project);
   }
@@ -227,6 +217,50 @@ function visualTransform(
     projects,
     settings: projectTimelineSettings,
   };
+}
+
+function populateProjectWithRoles(project : ProjectTimelineRow, milestones, index, dataViews) {
+  let pmAssignDate = getRoleIndex(dataViews, "pmAssign");
+  if (pmAssignDate != null) {
+    project.pmAssignDate = new Date(milestones[index][pmAssignDate].toString());
+  }
+  let endDate = getRoleIndex(dataViews, "endDate");
+  if (endDate != null) {
+    project.endDate = new Date(milestones[index][endDate].toString());
+    project.activeProgram = false;
+  }
+  else {
+    project.activeProgram = true;
+  }
+  let dealSign = getRoleIndex(dataViews, "dealSign");
+  if (dealSign != null) {
+    project.dealSign = new Date(milestones[index][dealSign].toString());
+  }
+  let dealClose = getRoleIndex(dataViews, "dealClose");
+  if (dealClose != null) {
+    project.dealClose = new Date(milestones[index][dealClose].toString());
+  }
+  let day2 = getRoleIndex(dataViews, "day2");
+  if (day2 != null) {
+    project.day2 = new Date(milestones[index][day2].toString());
+  }
+  let error = getRoleIndex(dataViews, "error");
+  if (error != null) {
+    project.error = milestones[index][error];
+  }
+  let pensDown = getRoleIndex(dataViews, "pensDown");
+  if (pensDown != null) {
+    project.pensDown = milestones[index][pensDown];
+    if(project.pensDown) {
+      project.activeProgram = false;
+    }
+  }
+
+  return project;
+}
+
+function getRoleIndex(dataView, role) {
+  return dataView[0].table.columns.find((e) => e.roles[role]).index;
 }
 
 function getColumnStrokeColor(
