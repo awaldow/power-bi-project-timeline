@@ -362,6 +362,7 @@ export class ProjectTimeline implements IVisual {
     );
     let settings = (this.projectTimelineSettings = viewModel.settings);
     this.projects = viewModel.projects;
+    debugger;
 
     // Turn on landing page in capabilities and remove comment to turn on landing page!
     // this.HandleLandingPage(options);
@@ -416,27 +417,47 @@ export class ProjectTimeline implements IVisual {
     };
 
     var dealsignTransform = function (d) {
-      return "translate(" + x(d.dealSign) + "," + y(d.projectName) + ")";
+      let yOffset = y(d.projectName) + 18;
+      let xOffset = 0;
+      if (d.dealSign != null && isValid(d.dealSign)) {
+        xOffset = x(d.dealSign);
+      }
+      return "translate(" + xOffset + "," + yOffset + ")";
     };
 
     var dealcloseTransform = function (d) {
-      return "translate(" + x(d.dealClose) + "," + y(d.projectName) + ")";
+      debugger;
+      let yOffset = y(d.projectName) + 18;
+      let xOffset = 0;
+      if (d.dealClose != null && isValid(d.dealClose)) {
+        xOffset = x(d.dealClose);
+      }
+      return "translate(" + xOffset + "," + yOffset + ")";
     };
 
     var day2Transform = function (d) {
-      return "translate(" + x(d.day2) + "," + y(d.projectName) + ")";
+      debugger;
+      let yOffset = y(d.projectName) + 18;
+      let xOffset = 0;
+      if (d.day2 != null && isValid(d.day2)) {
+        xOffset = x(d.day2);
+      }
+      return "translate(" + xOffset + "," + yOffset + ")";
     };
 
     var activeProgramTransform = function (d) {
-      return "translate(" + x(new Date()) + "," + y(d.projectName) + ")";
+      let yOffset = y(d.projectName) + 18;
+      return "translate(" + x(new Date()) + "," + yOffset + ")";
     };
 
     var transitionToSustainingTransform = function (d) {
-      return "translate(" + x(d.endDate) + "," + y(d.projectName) + ")";
+      let yOffset = y(d.projectName) + 18;
+      return "translate(" + x(d.endDate) + "," + yOffset + ")";
     };
 
     var pensDownTransform = function (d) {
-      return "translate(" + x(d.endDate) + "," + y(d.projectName) + ")";
+      let yOffset = y(d.projectName) + 18;
+      return "translate(" + x(d.endDate) + "," + yOffset + ")";
     };
 
     var errorTransform = function (d) {
@@ -487,7 +508,7 @@ export class ProjectTimeline implements IVisual {
 
     this.projectContainer
       .selectAll(".error")
-      .data(projects)
+      .data(this.projects)
       .enter()
       .append("rect")
       .attr("class", "error")
@@ -502,56 +523,66 @@ export class ProjectTimeline implements IVisual {
       });
 
     this.projectContainer.selectAll(".icon").remove();
-
+    let dealSignIcon =
+      '<g><path d="M0 0h24v24H0z" fill="none" /><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" fill="#cc681f" /></g>';
     this.projectContainer
-      .selectAll(".icon")
-      .data(projects)
+      .selectAll(".chart")
+      .data(this.projects)
       .enter()
-      .append("image")
-      .attr('class', 'icon')
-      .attr("xlink:href", "dealsign-24px.svg")
+      .append("g")
+      .attr("class", "dealsign icon")
+      //.attr("xlink:href", "dealsign-24px.svg")
       .attr("transform", dealsignTransform)
       .attr("display", function (d) {
-        return d.dealSign == null ? "none" : "";
+        return d.dealSign == null || !isValid(d.dealSign) ? "none" : "";
       })
       .attr("y", 18)
       .attr("width", 24)
-      .attr("height", 24);
+      .attr("height", 24)
+      .html(dealSignIcon);
+    let dealCloseIcon =
+      '<circle style="fill: rgb(94, 77, 129);" cx="32.104" cy="32.104" r="32.05" transform="matrix(7.705857, 0, 0, 7.687307, -0.362122, -0.36112)"/><text transform="matrix(12.363564, 0, 0, 13.171527, -259.909424, -342.372162)" style="fill: rgb(255, 255, 255); fill-rule: evenodd; font-family: &quot;Roboto Slab&quot;; font-size: 28px; white-space: pre;"><tspan x="35.077" y="55.291">1</tspan><tspan x="35.077" dy="1em">​</tspan></text>';
     this.projectContainer
-      .selectAll(".icon")
-      .data(projects)
+      .selectAll(".chart")
+      .data(this.projects)
       .enter()
-      .append("image")
-      .attr('class', 'icon')
-      .attr("xlink:href", "dealclose-day1.svg")
+      .append("g")
+      .attr("class", "dealclose icon")
+      //.attr("xlink:href", "dealclose-day1.svg")
       .attr("transform", dealcloseTransform)
       .attr("display", function (d) {
-        return d.dealClose == null ? "none" : "";
+        return d.dealClose == null || !isValid(d.dealClose) ? "none" : "";
       })
       .attr("y", 19)
       .attr("width", 24)
-      .attr("height", 24);
+      .attr("height", 24)
+      .html(dealCloseIcon);
+    let day2Icon =
+      '<circle style="fill: rgb(153, 136, 85);" cx="32.104" cy="32.104" r="32.05" transform="matrix(7.705857, 0, 0, 7.687307, -0.362122, -0.36112)"/><text transform="matrix(12.363564, 0, 0, 13.171527, -280.123444, -346.533875)" style="fill: rgb(255, 255, 255); fill-rule: evenodd; font-family: &quot;Roboto Slab&quot;; font-size: 28px; white-space: pre;"><tspan x="35.077" y="55.291">2</tspan><tspan x="35.077" dy="1em">​</tspan></text>';
     this.projectContainer
-      .selectAll(".icon")
-      .data(projects)
+      .selectAll(".chart")
+      .data(this.projects)
       .enter()
-      .append("image")
-      .attr('class', 'icon')
-      .attr("xlink:href", "day2.svg")
+      .append("g")
+      .attr("class", "day2 icon")
+      //.attr("xlink:href", "day2.svg")
       .attr("transform", day2Transform)
       .attr("display", function (d) {
-        return d.day2 == null ? "none" : "";
+        return d.day2 == null || !isValid(d.day2) ? "none" : "";
       })
       .attr("y", 19)
       .attr("width", 24)
-      .attr("height", 24);
+      .attr("height", 24)
+      .html(day2Icon);
+    let activeProgramIcon =
+      '<path d="M0 0h24v24H0z" fill="none" /><path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z" fill="#29416c" />';
     this.projectContainer
-      .selectAll(".icon")
-      .data(projects)
+      .selectAll(".chart")
+      .data(this.projects)
       .enter()
-      .append("image")
-      .attr('class', 'icon')
-      .attr("xlink:href", "activeprogram.svg")
+      .append("g")
+      .attr("class", "activeProgram icon")
+      //.attr("xlink:href", "activeprogram.svg")
       .attr("transform", activeProgramTransform)
       .attr("display", function (d) {
         return !d.pensDown && d.activeProgram ? "" : "none";
@@ -559,14 +590,16 @@ export class ProjectTimeline implements IVisual {
       .attr("x", -10)
       .attr("y", 19)
       .attr("width", 24)
-      .attr("height", 24);
+      .attr("height", 24)
+      .html(activeProgramIcon);
+    let transitionToSustainingIcon = '<path d="M0 0h24v24H0z" fill="none" /><path d="M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2z" fill="green" />';
     this.projectContainer
-      .selectAll(".icon")
-      .data(projects)
+      .selectAll(".chart")
+      .data(this.projects)
       .enter()
-      .append("image")
-      .attr('class', 'icon')
-      .attr("xlink:href", "transitiontosustaining.svg")
+      .append("g")
+      .attr("class", "transitionToSustaining icon")
+      //.attr("xlink:href", "transitiontosustaining.svg")
       .attr("transform", transitionToSustainingTransform)
       .attr("display", function (d) {
         return !d.activeProgram && !d.pensDown ? "" : "none";
@@ -574,14 +607,16 @@ export class ProjectTimeline implements IVisual {
       .attr("x", -10)
       .attr("y", 19)
       .attr("width", 24)
-      .attr("height", 24);
+      .attr("height", 24)
+      .html(transitionToSustainingIcon);
+    let pensDownIcon = '<path d="M0 0h24v24H0z" fill="none" /><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" fill="red" />';
     this.projectContainer
-      .selectAll(".icon")
-      .data(projects)
+      .selectAll(".chart")
+      .data(this.projects)
       .enter()
-      .append("image")
-      .attr('class', 'icon')
-      .attr("xlink:href", "pensdown-24px.svg")
+      .append("g")
+      .attr("class", "pensDown icon")
+      //.attr("xlink:href", "pensdown-24px.svg")
       .attr("transform", pensDownTransform)
       .attr("display", function (d) {
         return d.pensDown ? "" : "none";
@@ -589,7 +624,8 @@ export class ProjectTimeline implements IVisual {
       .attr("x", -10)
       .attr("y", 19)
       .attr("width", 24)
-      .attr("height", 24);
+      .attr("height", 24)
+      .html(pensDownIcon);
   }
 
   private firstStartDate(projects: ProjectTimelineRow[]): Date {

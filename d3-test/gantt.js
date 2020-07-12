@@ -164,14 +164,18 @@ d3.gantt = function () {
       .attr("y", 19)
       .attr("width", 24)
       .attr("height", 24);
+    let day2Icon =
+      '<svg width="24" height="24"><circle style="fill: rgb(153, 136, 85);" cx="32.104" cy="32.104" r="32.05" transform="matrix(7.705857, 0, 0, 7.687307, -0.362122, -0.36112)"/><text transform="matrix(12.363564, 0, 0, 13.171527, -280.123444, -346.533875)" style="fill: rgb(255, 255, 255); fill-rule: evenodd; font-family: &quot;Roboto Slab&quot;; font-size: 28px; white-space: pre;"><tspan x="35.077" y="55.291">2</tspan><tspan x="35.077" dy="1em">​</tspan></text></svg>';
     svg.selectAll('.icon')
       .data(projects)
-      .enter().append("image").attr("xlink:href", "svg/day2.svg")
+      .enter().append("g")//.attr("xlink:href", "svg/day2.svg")
       .attr("transform", day2Transform)
       .attr("display", function (d) { return d.day2 == null ? "none" : "" })
+      .attr("class", 'day2')
       .attr("y", 19)
       .attr("width", 24)
-      .attr("height", 24);
+      .attr("height", 24)
+      .html(day2Icon);
     svg.selectAll('.icon')
       .data(projects)
       .enter().append("image").attr("xlink:href", "svg/activeprogram.svg")
