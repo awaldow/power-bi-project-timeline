@@ -3,6 +3,7 @@ import { event as d3Event, select as d3Select } from "d3-selection";
 import { scaleLinear, scaleBand, scaleTime, scaleOrdinal } from "d3-scale";
 import { timeMonth } from "d3-time";
 import { timeFormat } from "d3-time-format";
+import isValid from "date-fns/isValid";
 
 import { axisBottom, axisTop, axisLeft } from "d3-axis";
 
@@ -181,8 +182,8 @@ function visualTransform(
   for (let i = 0, len = Math.max(milestones.length, 0); i < len; i++) {
     let project: ProjectTimelineRow = {
       projectName: milestones[i][0].toString(),
-      pmAssignDate: null,
-      endDate: null,
+      pmAssignDate: new Date(0),
+      endDate: new Date(),
       day2: null,
       dealClose: null,
       dealSign: null,
@@ -201,9 +202,9 @@ function visualTransform(
     project = populateProjectWithRoles(project, milestones, i, dataViews);
 
     projects.push(project);
-  }
-  if (projects.length > 0) {
-    debugger;
+    projects.sort(function (a, b) {
+      return a.pmAssignDate.getTime() - b.pmAssignDate.getTime();
+    });
   }
 
   return {
@@ -212,17 +213,27 @@ function visualTransform(
   };
 }
 
-function populateProjectWithRoles(project : ProjectTimelineRow, milestones, index, dataViews) {
+function populateProjectWithRoles(
+  project: ProjectTimelineRow,
+  milestones,
+  index,
+  dataViews
+) {
   let pmAssignDate = getRoleIndex(dataViews, "pmAssign");
   if (pmAssignDate != null) {
     project.pmAssignDate = new Date(milestones[index][pmAssignDate].toString());
   }
-  let endDate = getRoleIndex(dataViews, "endDate");
-  if (endDate != null) {
-    project.endDate = new Date(milestones[index][endDate].toString());
-    project.activeProgram = false;
-  }
-  else {
+  let endDateIdx = getRoleIndex(dataViews, "endDate");
+  if (endDateIdx != null) {
+    let endDate = new Date(milestones[index][endDateIdx].toString());
+    if (isValid(endDate)) {
+      project.endDate = endDate;
+      project.activeProgram = false;
+    } else {
+      project.endDate = new Date();
+      project.activeProgram = true;
+    }
+  } else {
     project.activeProgram = true;
   }
   let dealSign = getRoleIndex(dataViews, "dealSign");
@@ -244,7 +255,7 @@ function populateProjectWithRoles(project : ProjectTimelineRow, milestones, inde
   let pensDown = getRoleIndex(dataViews, "pensDown");
   if (pensDown != null) {
     project.pensDown = milestones[index][pensDown];
-    if(project.pensDown) {
+    if (project.pensDown) {
       project.activeProgram = false;
     }
   }
@@ -351,9 +362,6 @@ export class ProjectTimeline implements IVisual {
     );
     let settings = (this.projectTimelineSettings = viewModel.settings);
     this.projects = viewModel.projects;
-    if (this.projects.length > 0) {
-      debugger;
-    }
 
     // Turn on landing page in capabilities and remove comment to turn on landing page!
     // this.HandleLandingPage(options);
@@ -369,7 +377,7 @@ export class ProjectTimeline implements IVisual {
     //     .range([height, 0]);
     let y = scaleBand()
       .domain(this.projects.map((p) => p.projectName))
-      .range([0, this.projects.length * 50]);
+      .range([0, this.projects.length * 35]);
     //let yScale = scaleOrdinal().domain(this.projects.map(p => p.projectName)).range([0, this.projects.length]);
 
     let timeDomainStart = timeMonth.offset(
@@ -404,6 +412,34 @@ export class ProjectTimeline implements IVisual {
     };
 
     var rectTransform = function (d) {
+      return "translate(" + x(d.pmAssignDate) + "," + y(d.projectName) + ")";
+    };
+
+    var dealsignTransform = function (d) {
+      return "translate(" + x(d.dealSign) + "," + y(d.projectName) + ")";
+    };
+
+    var dealcloseTransform = function (d) {
+      return "translate(" + x(d.dealClose) + "," + y(d.projectName) + ")";
+    };
+
+    var day2Transform = function (d) {
+      return "translate(" + x(d.day2) + "," + y(d.projectName) + ")";
+    };
+
+    var activeProgramTransform = function (d) {
+      return "translate(" + x(new Date()) + "," + y(d.projectName) + ")";
+    };
+
+    var transitionToSustainingTransform = function (d) {
+      return "translate(" + x(d.endDate) + "," + y(d.projectName) + ")";
+    };
+
+    var pensDownTransform = function (d) {
+      return "translate(" + x(d.endDate) + "," + y(d.projectName) + ")";
+    };
+
+    var errorTransform = function (d) {
       return "translate(" + x(d.pmAssignDate) + "," + y(d.projectName) + ")";
     };
 
@@ -448,6 +484,112 @@ export class ProjectTimeline implements IVisual {
       .text(function (d) {
         return d.pmAssignDate.toLocaleDateString("en-US");
       });
+
+    this.projectContainer
+      .selectAll(".error")
+      .data(projects)
+      .enter()
+      .append("rect")
+      .attr("class", "error")
+      .attr("y", 30)
+      .attr("transform", errorTransform)
+      .attr("height", 1)
+      .attr("display", function (d) {
+        return d.error ? "" : "none";
+      })
+      .attr("width", function (d) {
+        return x(d.endDate) - x(d.pmAssignDate);
+      });
+
+    this.projectContainer.selectAll(".icon").remove();
+
+    this.projectContainer
+      .selectAll(".icon")
+      .data(projects)
+      .enter()
+      .append("image")
+      .attr('class', 'icon')
+      .attr("xlink:href", "dealsign-24px.svg")
+      .attr("transform", dealsignTransform)
+      .attr("display", function (d) {
+        return d.dealSign == null ? "none" : "";
+      })
+      .attr("y", 18)
+      .attr("width", 24)
+      .attr("height", 24);
+    this.projectContainer
+      .selectAll(".icon")
+      .data(projects)
+      .enter()
+      .append("image")
+      .attr('class', 'icon')
+      .attr("xlink:href", "dealclose-day1.svg")
+      .attr("transform", dealcloseTransform)
+      .attr("display", function (d) {
+        return d.dealClose == null ? "none" : "";
+      })
+      .attr("y", 19)
+      .attr("width", 24)
+      .attr("height", 24);
+    this.projectContainer
+      .selectAll(".icon")
+      .data(projects)
+      .enter()
+      .append("image")
+      .attr('class', 'icon')
+      .attr("xlink:href", "day2.svg")
+      .attr("transform", day2Transform)
+      .attr("display", function (d) {
+        return d.day2 == null ? "none" : "";
+      })
+      .attr("y", 19)
+      .attr("width", 24)
+      .attr("height", 24);
+    this.projectContainer
+      .selectAll(".icon")
+      .data(projects)
+      .enter()
+      .append("image")
+      .attr('class', 'icon')
+      .attr("xlink:href", "activeprogram.svg")
+      .attr("transform", activeProgramTransform)
+      .attr("display", function (d) {
+        return !d.pensDown && d.activeProgram ? "" : "none";
+      })
+      .attr("x", -10)
+      .attr("y", 19)
+      .attr("width", 24)
+      .attr("height", 24);
+    this.projectContainer
+      .selectAll(".icon")
+      .data(projects)
+      .enter()
+      .append("image")
+      .attr('class', 'icon')
+      .attr("xlink:href", "transitiontosustaining.svg")
+      .attr("transform", transitionToSustainingTransform)
+      .attr("display", function (d) {
+        return !d.activeProgram && !d.pensDown ? "" : "none";
+      })
+      .attr("x", -10)
+      .attr("y", 19)
+      .attr("width", 24)
+      .attr("height", 24);
+    this.projectContainer
+      .selectAll(".icon")
+      .data(projects)
+      .enter()
+      .append("image")
+      .attr('class', 'icon')
+      .attr("xlink:href", "pensdown-24px.svg")
+      .attr("transform", pensDownTransform)
+      .attr("display", function (d) {
+        return d.pensDown ? "" : "none";
+      })
+      .attr("x", -10)
+      .attr("y", 19)
+      .attr("width", 24)
+      .attr("height", 24);
   }
 
   private firstStartDate(projects: ProjectTimelineRow[]): Date {
