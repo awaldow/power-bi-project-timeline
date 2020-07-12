@@ -31,6 +31,11 @@
             "kind": "Grouping"
         },
         {
+            "displayName": "Pens Down",
+            "name": "pensDown",
+            "kind": "Grouping"
+        },
+        {
             "displayName": "Milestones",
             "name": "milestones",
             "kind": "Grouping"
@@ -69,6 +74,11 @@
                         {
                             "for": {
                                 "in": "day2"
+                            }
+                        },
+                        {
+                            "for": {
+                                "in": "pensDown"
                             }
                         },
                         {

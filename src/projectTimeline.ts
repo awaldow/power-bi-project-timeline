@@ -1,9 +1,8 @@
 import "./../style/visual.less";
 import { event as d3Event, select as d3Select } from "d3-selection";
 import { scaleLinear, scaleBand, scaleTime, scaleOrdinal } from "d3-scale";
-import { timeMonth } from 'd3-time';
-import { timeFormat } from 'd3-time-format';
-
+import { timeMonth } from "d3-time";
+import { timeFormat } from "d3-time-format";
 
 import { axisBottom, axisTop, axisLeft } from "d3-axis";
 
@@ -60,6 +59,10 @@ interface ProjectTimelineRow {
   dealSign: Date;
   dealClose: Date;
   day2: Date;
+  pensDown: boolean;
+  error: boolean;
+  activeProgram: boolean;
+
   milestones: Milestone[];
 }
 
@@ -76,18 +79,46 @@ let projects: ProjectTimelineRow[] = [
     dealSign: new Date("6/1/2015"),
     dealClose: new Date("7/13/2015"),
     day2: new Date("7/15/2018"),
-    milestones: [
-    ],
+    error: false,
+    activeProgram: false,
+    pensDown: false,
+    milestones: [],
   },
   {
     projectName: "eASIC",
     pmAssignDate: new Date("2/2/2018"),
-    endDate: new Date(""),
+    endDate: new Date(),
     dealSign: new Date("8/7/2018"),
     dealClose: new Date("9/9/2018"),
-    day2: new Date(""),
-    milestones: [
-    ],
+    day2: null,
+    error: false,
+    activeProgram: true,
+    pensDown: false,
+    milestones: [],
+  },
+  {
+    projectName: "MAVinci GmbH",
+    pmAssignDate: new Date("7/20/2016"),
+    endDate: new Date("12/18/2017"),
+    dealSign: new Date("9/5/2016"),
+    dealClose: new Date("10/1/2016"),
+    day2: new Date("10/10/2017"),
+    error: true,
+    activeProgram: false,
+    pensDown: false,
+    milestones: [],
+  },
+  {
+    projectName: "Pens Down Test",
+    pmAssignDate: new Date("7/20/2016"),
+    endDate: new Date("9/20/2016"),
+    dealSign: null,
+    dealClose: null,
+    day2: null,
+    error: false,
+    activeProgram: false,
+    pensDown: true,
+    milestones: [],
   },
 ];
 
@@ -161,6 +192,9 @@ function visualTransform(
       day2: new Date(),
       dealClose: new Date(),
       dealSign: new Date(),
+      activeProgram: false,
+      error: false,
+      pensDown: false,
       milestones: [],
     };
     for (let j = 1; j < dataViews[0].table.columns.length; j++) {
@@ -171,18 +205,21 @@ function visualTransform(
       project.milestones.push(milestone);
     }
     // TODO: Need to create a better way to get the right roled milestones out and into the project object
-    let pmAssignDate = dataViews[0].table.columns.find(e => e.roles['pmAssign']).index;
-    if(pmAssignDate != null) {
+    let pmAssignDate = dataViews[0].table.columns.find(
+      (e) => e.roles["pmAssign"]
+    ).index;
+    if (pmAssignDate != null) {
       project.pmAssignDate = new Date(milestones[i][pmAssignDate].toString());
     }
-    let endDate = dataViews[0].table.columns.find(e => e.roles['endDate']).index;
-    if(endDate != null) {
+    let endDate = dataViews[0].table.columns.find((e) => e.roles["endDate"])
+      .index;
+    if (endDate != null) {
       project.endDate = new Date(milestones[i][endDate].toString());
     }
 
     projects.push(project);
   }
-  if(projects.length > 0) {
+  if (projects.length > 0) {
     debugger;
   }
 
@@ -261,8 +298,14 @@ export class ProjectTimeline implements IVisual {
       .attr("transform", "translate(0, 20)")
       .classed("projectContainer", true);
 
-    this.xAxis = this.projectContainer.append("g").attr("class", "x axis").classed("xAxis", true);
-    this.yAxis = this.projectContainer.append("g").attr("class", "y axis").classed("yAxis", true);
+    this.xAxis = this.projectContainer
+      .append("g")
+      .attr("class", "x axis")
+      .classed("xAxis", true);
+    this.yAxis = this.projectContainer
+      .append("g")
+      .attr("class", "y axis")
+      .classed("yAxis", true);
 
     // this.initAverageLine();
 
@@ -281,7 +324,7 @@ export class ProjectTimeline implements IVisual {
     );
     let settings = (this.projectTimelineSettings = viewModel.settings);
     this.projects = viewModel.projects;
-    if(this.projects.length > 0) {
+    if (this.projects.length > 0) {
       debugger;
     }
 
@@ -297,20 +340,26 @@ export class ProjectTimeline implements IVisual {
     // let yScale = scaleLinear()
     //     .domain([0, viewModel.dataMax])
     //     .range([height, 0]);
-    let y = scaleBand().domain(this.projects.map(p => p.projectName)).range([0, this.projects.length * 50]);
+    let y = scaleBand()
+      .domain(this.projects.map((p) => p.projectName))
+      .range([0, this.projects.length * 50]);
     //let yScale = scaleOrdinal().domain(this.projects.map(p => p.projectName)).range([0, this.projects.length]);
 
-    let timeDomainStart = timeMonth.offset(this.firstStartDate(this.projects), -5);
+    let timeDomainStart = timeMonth.offset(
+      this.firstStartDate(this.projects),
+      -5
+    );
     let timeDomainEnd = timeMonth.offset(this.lastEndDate(this.projects), 2);
 
     let x = scaleTime()
-      .domain([
-        timeDomainStart,
-        timeDomainEnd,
-      ])
-      .rangeRound([0, width]).nice();
+      .domain([timeDomainStart, timeDomainEnd])
+      .rangeRound([0, width])
+      .nice();
 
-    let xAxis = axisTop(x).tickFormat(timeFormat(this.tickFormat)).tickSize(8).ticks(10);
+    let xAxis = axisTop(x)
+      .tickFormat(timeFormat(this.tickFormat))
+      .tickSize(8)
+      .ticks(10);
     let yAxis = axisLeft(y).tickSize(0);
     this.xAxis.call(xAxis);
     this.yAxis.call(yAxis);
@@ -332,8 +381,10 @@ export class ProjectTimeline implements IVisual {
     };
 
     this.projectContainer.selectAll(".bar").remove();
-    this.projectContainer.selectAll(".chart")
-      .data(this.projects, keyFunction).enter()
+    this.projectContainer
+      .selectAll(".chart")
+      .data(this.projects, keyFunction)
+      .enter()
       .append("rect")
       .attr("rx", 0)
       .attr("ry", 0)
@@ -342,26 +393,34 @@ export class ProjectTimeline implements IVisual {
       })
       .attr("y", 20)
       .attr("transform", rectTransform)
-      .attr("height", function (d) { return 20; })
+      .attr("height", function (d) {
+        return 20;
+      })
       .attr("width", function (d) {
-        return (x(d.endDate) - x(d.pmAssignDate));
+        return x(d.endDate) - x(d.pmAssignDate);
       });
 
     this.projectContainer.selectAll(".label").remove();
-    this.projectContainer.selectAll(".text")
-      .data(this.projects).enter()
+    this.projectContainer
+      .selectAll(".text")
+      .data(this.projects)
+      .enter()
       .append("text")
       .attr("class", "label")
       .attr("transform", rectTransform)
       .attr("x", -80)
       .attr("y", 25)
-      .text(function (d) { return d.projectName })
+      .text(function (d) {
+        return d.projectName;
+      })
       .append("tspan")
       .attr("class", "label")
       .attr("transform", rectTransform)
       .attr("x", -80)
       .attr("y", 40)
-      .text(function (d) { return d.pmAssignDate.toLocaleDateString("en-US") });
+      .text(function (d) {
+        return d.pmAssignDate.toLocaleDateString("en-US");
+      });
   }
 
   private firstStartDate(projects: ProjectTimelineRow[]): Date {
