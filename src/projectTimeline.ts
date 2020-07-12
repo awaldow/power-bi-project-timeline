@@ -62,8 +62,6 @@ interface ProjectTimelineRow {
   pensDown: boolean;
   error: boolean;
   activeProgram: boolean;
-
-  milestones: Milestone[];
 }
 
 interface Milestone {
@@ -82,7 +80,6 @@ let projects: ProjectTimelineRow[] = [
     error: false,
     activeProgram: false,
     pensDown: false,
-    milestones: [],
   },
   {
     projectName: "eASIC",
@@ -94,7 +91,6 @@ let projects: ProjectTimelineRow[] = [
     error: false,
     activeProgram: true,
     pensDown: false,
-    milestones: [],
   },
   {
     projectName: "MAVinci GmbH",
@@ -106,7 +102,6 @@ let projects: ProjectTimelineRow[] = [
     error: true,
     activeProgram: false,
     pensDown: false,
-    milestones: [],
   },
   {
     projectName: "Pens Down Test",
@@ -115,10 +110,9 @@ let projects: ProjectTimelineRow[] = [
     dealSign: null,
     dealClose: null,
     day2: null,
-    error: false,
+    error: true,
     activeProgram: false,
     pensDown: true,
-    milestones: [],
   },
 ];
 
@@ -195,7 +189,6 @@ function visualTransform(
       activeProgram: false,
       error: false,
       pensDown: false,
-      milestones: [],
     };
     // for (let j = 1; j < dataViews[0].table.columns.length; j++) {
     //   let milestone: Milestone = {

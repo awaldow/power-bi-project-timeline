@@ -9,8 +9,6 @@ var projects = [
         error: false,
         activeProgram: false,
         pensDown: false,
-        milestones: [
-        ],
     },
     {
         projectName: "eASIC",
@@ -22,8 +20,6 @@ var projects = [
         error: false,
         activeProgram: true,
         pensDown: false,
-        milestones: [
-        ],
     },
     {
         projectName: "MAVinci GmbH",
@@ -35,8 +31,6 @@ var projects = [
         error: false,
         activeProgram: false,
         pensDown: false,
-        milestones: [
-        ],
     },
     {
         projectName: "Pens Down Test",
@@ -48,8 +42,6 @@ var projects = [
         error: true,
         activeProgram: false,
         pensDown: true,
-        milestones: [
-        ],
     },
 ];
 
