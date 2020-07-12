@@ -1,19 +1,63 @@
-.circleCard {
-    position: relative;
-    box-sizing: border-box;
-    border: 1px solid #000;
-    border-radius: 50%;
-    min-width: 200px;
-    min-height: 200px;
-}
-
 p {
-    text-align: center;
-    line-height: 30px;
     font-size: 20px;
     font-weight: bold;
+    em {
+        background: yellow;
+        padding: 5px;
+        
+    }
+}
 
-    position: relative;
-    top: -30px;
-    margin: 50% 0 0 0;
+.y {
+	display: none;
+}
+
+.label {
+	font-size: 10px;
+	font-family: Arial, sans-serif;
+}
+
+.axis path,.axis line {
+	fill: none;
+	stroke: #000;
+	shape-rendering: crispEdges;
+}
+
+.bar {
+    fill: #c8d9ed;
+}
+
+.helpLink {
+    position: absolute;
+    top: 0px;
+    right: 12px;
+    display: block;
+    width: 20px;
+    height: 20px;
+    border: 2px solid #80B0E0;
+    border-radius: 20px;
+    color: #80B0E0;
+    text-align: center;
+    font-size: 16px;
+    line-height: 20px;
+
+    &.hidden {
+        display: none;
+    }
+}
+
+.LandingPage {
+    position: absolute;
+    text-align: center;
+    top: 12px;
+    font-size: 12pt;
+    right: 15px;
+}
+
+.LandingPageHelpLink {
+    position: absolute;
+    text-decoration: underline;
+    top: 50px;
+    font-size: 12pt;
+    right: 15px;
 }
