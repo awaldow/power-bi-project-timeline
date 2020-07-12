@@ -29,6 +29,14 @@ d3.gantt = function () {
     return "translate(" + x(d.pmAssignDate) + "," + y(d.projectName) + ")";
   }
 
+  var dealsignTransform = function (d) {
+    return "translate(" + x(d.milestones.find(p => p.milestoneType == "Deal Sign").milestoneDate) + "," + y(d.projectName) + ")";
+  }
+
+  var dealcloseTransform = function (d) {
+    return "translate(" + x(d.milestones.find(p => p.milestoneType == "Deal Close/Day 1").milestoneDate) + "," + y(d.projectName) + ")";
+  }
+
   var x, y, xAxis, yAxis;
 
   initAxis();
@@ -111,6 +119,21 @@ d3.gantt = function () {
       .attr("x", -80)
       .attr("y", 40)
       .text(function (d) { return d.pmAssignDate.toLocaleDateString("en-US") });
+
+    svg.selectAll('.icon')
+      .data(projects)
+      .enter().append("image").attr("xlink:href", "svg/dealsign-24px.svg")
+      .attr("transform", dealsignTransform)
+      .attr("y", 19)
+      .attr("width", 24)
+      .attr("height", 24);
+    svg.selectAll('.icon')
+      .data(projects)
+      .enter().append("image").attr("xlink:href", "svg/dealclose-day1.svg")
+      .attr("transform", dealcloseTransform)
+      .attr("y", 19)
+      .attr("width", 24)
+      .attr("height", 24);
 
     svg.append("g")
       .attr("class", "x axis")
