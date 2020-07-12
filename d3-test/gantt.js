@@ -49,6 +49,10 @@ d3.gantt = function () {
     return "translate(" + x(d.endDate) + "," + y(d.projectName) + ")";
   }
 
+  var errorTransform = function (d) {
+    return "translate(" + x(d.pmAssignDate) + "," + y(d.projectName) + ")";
+  }
+
   var x, y, xAxis, yAxis;
 
   initAxis();
@@ -116,6 +120,18 @@ d3.gantt = function () {
         return (x(d.endDate) - x(d.pmAssignDate));
       });
 
+    svg.selectAll('.error')
+      .data(projects).enter()
+      .append('rect')
+      .attr('class', 'error')
+      .attr('y', 30)
+      .attr('transform', errorTransform)
+      .attr('height', 1)
+      .attr("display", function (d) { return d.error ? "" : "none" })
+      .attr('width', function (d) {
+        return (x(d.endDate) - x(d.pmAssignDate));
+      })
+
     svg.selectAll(".text")
       .data(projects).enter()
       .append("text")
@@ -180,7 +196,6 @@ d3.gantt = function () {
       .attr("y", 19)
       .attr("width", 24)
       .attr("height", 24);
-
 
     svg.append("g")
       .attr("class", "x axis")

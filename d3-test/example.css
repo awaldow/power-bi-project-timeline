@@ -19,6 +19,10 @@ html,body,#wrapper {
 	shape-rendering: crispEdges;
 }
  
+.error {
+    fill: red;
+}
+
 .label {
 	font-size: 10px;
 	font-family: Arial, sans-serif;

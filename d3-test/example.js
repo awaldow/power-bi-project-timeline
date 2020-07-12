@@ -32,7 +32,7 @@ var projects = [
         dealSign: new Date("9/5/2016"),
         dealClose: new Date("10/1/2016"),
         day2: new Date("10/10/2017"),
-        error: true,
+        error: false,
         activeProgram: false,
         pensDown: false,
         milestones: [
@@ -45,7 +45,7 @@ var projects = [
         dealSign: null,
         dealClose: null,
         day2: null,
-        error: false,
+        error: true,
         activeProgram: false,
         pensDown: true,
         milestones: [
