@@ -440,49 +440,49 @@ export class ProjectTimeline implements IVisual {
       }
     }
 
-    var dealsignTransform = function (d) {
-      let yOffset = y(d.projectName) + 18;
-      let xOffset = 0;
-      if (d.dealSign != null && isValid(d.dealSign)) {
-        xOffset = x(d.dealSign);
-      }
-      return "translate(" + xOffset + "," + yOffset + ")";
-    };
+    // var dealsignTransform = function (d) {
+    //   let yOffset = y(d.projectName) + 18;
+    //   let xOffset = 0;
+    //   if (d.dealSign != null && isValid(d.dealSign)) {
+    //     xOffset = x(d.dealSign);
+    //   }
+    //   return "translate(" + xOffset + "," + yOffset + ")";
+    // };
 
-    var dealcloseTransform = function (d) {
-      debugger;
-      let yOffset = y(d.projectName) + 18;
-      let xOffset = 0;
-      if (d.dealClose != null && isValid(d.dealClose)) {
-        xOffset = x(d.dealClose);
-      }
-      return "translate(" + xOffset + "," + yOffset + ")";
-    };
+    // var dealcloseTransform = function (d) {
+    //   debugger;
+    //   let yOffset = y(d.projectName) + 18;
+    //   let xOffset = 0;
+    //   if (d.dealClose != null && isValid(d.dealClose)) {
+    //     xOffset = x(d.dealClose);
+    //   }
+    //   return "translate(" + xOffset + "," + yOffset + ")";
+    // };
 
-    var day2Transform = function (d) {
-      debugger;
-      let yOffset = y(d.projectName) + 18;
-      let xOffset = 0;
-      if (d.day2 != null && isValid(d.day2)) {
-        xOffset = x(d.day2);
-      }
-      return "translate(" + xOffset + "," + yOffset + ")";
-    };
+    // var day2Transform = function (d) {
+    //   debugger;
+    //   let yOffset = y(d.projectName) + 18;
+    //   let xOffset = 0;
+    //   if (d.day2 != null && isValid(d.day2)) {
+    //     xOffset = x(d.day2);
+    //   }
+    //   return "translate(" + xOffset + "," + yOffset + ")";
+    // };
 
-    var activeProgramTransform = function (d) {
-      let yOffset = y(d.projectName) + 18;
-      return "translate(" + x(new Date()) + "," + yOffset + ")";
-    };
+    // var activeProgramTransform = function (d) {
+    //   let yOffset = y(d.projectName) + 18;
+    //   return "translate(" + x(new Date()) + "," + yOffset + ")";
+    // };
 
-    var transitionToSustainingTransform = function (d) {
-      let yOffset = y(d.projectName) + 18;
-      return "translate(" + x(d.endDate) + "," + yOffset + ")";
-    };
+    // var transitionToSustainingTransform = function (d) {
+    //   let yOffset = y(d.projectName) + 18;
+    //   return "translate(" + x(d.endDate) + "," + yOffset + ")";
+    // };
 
-    var pensDownTransform = function (d) {
-      let yOffset = y(d.projectName) + 18;
-      return "translate(" + x(d.endDate) + "," + yOffset + ")";
-    };
+    // var pensDownTransform = function (d) {
+    //   let yOffset = y(d.projectName) + 18;
+    //   return "translate(" + x(d.endDate) + "," + yOffset + ")";
+    // };
 
     var errorTransform = function (d) {
       return "translate(" + x(d.pmAssignDate) + "," + y(d.projectName) + ")";
