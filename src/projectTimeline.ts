@@ -416,6 +416,30 @@ export class ProjectTimeline implements IVisual {
       return "translate(" + x(d.pmAssignDate) + "," + y(d.projectName) + ")";
     };
 
+    var innerIconTransform = function (icon) {
+      return (d) => {
+        let yOffset = y(d.projectName) + 18;
+        let xOffset = 0;
+        if (d[icon] != null && isValid(d[icon])) {
+          xOffset = x(d[icon]);
+        }
+        return "translate(" + xOffset + "," + yOffset + ")";
+      }
+    }
+
+    var endIconTransform = function (icon) {
+      return (d) => {
+        if (icon === 'activeProgram') {
+          let yOffset = y(d.projectName) + 18;
+          return "translate(" + x(new Date()) + "," + yOffset + ")";
+        }
+        else {
+          let yOffset = y(d.projectName) + 18;
+          return "translate(" + x(d.endDate) + "," + yOffset + ")";
+        }
+      }
+    }
+
     var dealsignTransform = function (d) {
       let yOffset = y(d.projectName) + 18;
       let xOffset = 0;
@@ -532,7 +556,8 @@ export class ProjectTimeline implements IVisual {
       .append("g")
       .attr("class", "dealsign icon")
       //.attr("xlink:href", "dealsign-24px.svg")
-      .attr("transform", dealsignTransform)
+      //.attr("transform", dealsignTransform)
+      .attr("transform", innerIconTransform("dealSign"))
       .attr("display", function (d) {
         return d.dealSign == null || !isValid(d.dealSign) ? "none" : "";
       })
@@ -549,7 +574,8 @@ export class ProjectTimeline implements IVisual {
       .append("g")
       .attr("class", "dealclose icon")
       //.attr("xlink:href", "dealclose-day1.svg")
-      .attr("transform", dealcloseTransform)
+      //.attr("transform", dealcloseTransform)
+      .attr("transform", innerIconTransform("dealClose"))
       .attr("display", function (d) {
         return d.dealClose == null || !isValid(d.dealClose) ? "none" : "";
       })
@@ -566,7 +592,8 @@ export class ProjectTimeline implements IVisual {
       .append("g")
       .attr("class", "day2 icon")
       //.attr("xlink:href", "day2.svg")
-      .attr("transform", day2Transform)
+      //.attr("transform", day2Transform)
+      .attr("transform", innerIconTransform("day2"))
       .attr("display", function (d) {
         return d.day2 == null || !isValid(d.day2) ? "none" : "";
       })
@@ -583,7 +610,8 @@ export class ProjectTimeline implements IVisual {
       .append("g")
       .attr("class", "activeProgram icon")
       //.attr("xlink:href", "activeprogram.svg")
-      .attr("transform", activeProgramTransform)
+      //.attr("transform", activeProgramTransform)
+      .attr("transform", endIconTransform('activeProgram'))
       .attr("display", function (d) {
         return !d.pensDown && d.activeProgram ? "" : "none";
       })
@@ -600,7 +628,8 @@ export class ProjectTimeline implements IVisual {
       .append("g")
       .attr("class", "transitionToSustaining icon")
       //.attr("xlink:href", "transitiontosustaining.svg")
-      .attr("transform", transitionToSustainingTransform)
+      //.attr("transform", transitionToSustainingTransform)
+      .attr("transform", endIconTransform('transitionToSustaining'))
       .attr("display", function (d) {
         return !d.activeProgram && !d.pensDown ? "" : "none";
       })
@@ -617,7 +646,8 @@ export class ProjectTimeline implements IVisual {
       .append("g")
       .attr("class", "pensDown icon")
       //.attr("xlink:href", "pensdown-24px.svg")
-      .attr("transform", pensDownTransform)
+      //.attr("transform", pensDownTransform)
+      .attr("transform", endIconTransform('pensDown'))
       .attr("display", function (d) {
         return d.pensDown ? "" : "none";
       })
