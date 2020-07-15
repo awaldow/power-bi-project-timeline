@@ -512,7 +512,7 @@ export class ProjectTimeline implements IVisual {
       , this.projects);
 
     let dealCloseIcon =
-      '<svg width="24" height="24"><circle style="fill: rgb(94, 77, 129);" cx="12" cy="12" r="12" /><text style="fill: rgb(255, 255, 255); fill-rule: evenodd; font-family: &quot;Roboto Slab&quot;; font-size: 22px; white-space: pre;"><tspan x="7" y="19">1</tspan></text></svg>';
+      '<svg width="24" height="24"><circle style="fill: rgb(94, 77, 129);" cx="12" cy="12" r="12" /><text style="fill: rgb(255, 255, 255); fill-rule: evenodd; font-family: &quot;Roboto Slab&quot;; font-size: 22px; white-space: pre;"><tspan x="6" y="19">1</tspan></text></svg>';
     this.renderIcon(this.projectContainer, 'dealClose', dealCloseIcon, innerIconTransform('dealClose'),
       function (d) {
         return d.dealClose == null || !isValid(d.dealClose) ? "none" : "";

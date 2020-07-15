@@ -30,7 +30,8 @@ d3.gantt = function () {
   }
 
   var dealcloseTransform = function (d) {
-    return "translate(" + x(d.dealClose) + "," + y(d.projectName) + ")";
+    let yOffset = y(d.projectName) + 19;
+    return "translate(" + x(d.dealClose) + "," + yOffset + ")";
   }
 
   var day2Transform = function (d) {
@@ -157,14 +158,16 @@ d3.gantt = function () {
       .attr("y", 18)
       .attr("width", 24)
       .attr("height", 24);
+    let dealCloseIcon = '<svg width="24" height="24"><circle style="fill: rgb(94, 77, 129);" cx="12" cy="12" r="12" /><text style="fill: rgb(255, 255, 255); fill-rule: evenodd; font-family: &quot;Roboto Slab&quot;; font-size: 22px; white-space: pre;"><tspan x="6" y="19">1</tspan></text></svg>';
     svg.selectAll('.icon')
       .data(projects)
-      .enter().append("image").attr("xlink:href", "svg/dealclose-day1.svg")
+      .enter().append("g")//.attr("xlink:href", "svg/dealclose-day1.svg")
       .attr("transform", dealcloseTransform)
       .attr("display", function (d) { return d.dealClose == null ? "none" : "" })
       .attr("y", 19)
       .attr("width", 24)
-      .attr("height", 24);
+      .attr("height", 24)
+      .html(dealCloseIcon);
     let day2Icon =
       '<svg width="24" height="24"><circle style="fill: rgb(153, 136, 85);" cx="12" cy="12" r="12" /><text style="fill: rgb(255, 255, 255); fill-rule: evenodd; font-family: &quot;Roboto Slab&quot;; font-size: 22px; white-space: pre;"><tspan x="7" y="19">2</tspan></text></svg>';
     svg.selectAll('.icon')
