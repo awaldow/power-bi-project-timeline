@@ -16,6 +16,31 @@
             "kind": "Grouping"
         },
         {
+            "displayName": "Deal Sign",
+            "name": "dealSign",
+            "kind": "Grouping"
+        },
+        {
+            "displayName": "Deal Close/Day 1",
+            "name": "dealClose",
+            "kind": "Grouping"
+        },
+        {
+            "displayName": "Day 2",
+            "name": "day2",
+            "kind": "Grouping"
+        },
+        {
+            "displayName": "Pens Down",
+            "name": "pensDown",
+            "kind": "Grouping"
+        },
+        {
+            "displayName": "Error",
+            "name": "error",
+            "kind": "Grouping"
+        },
+        {
             "displayName": "Milestones",
             "name": "milestones",
             "kind": "Grouping"
@@ -39,6 +64,31 @@
                         {
                             "for": {
                                 "in": "endDate"
+                            }
+                        },
+                        {
+                            "for": {
+                                "in": "dealSign"
+                            }
+                        },
+                        {
+                            "for": {
+                                "in": "dealClose"
+                            }
+                        },
+                        {
+                            "for": {
+                                "in": "day2"
+                            }
+                        },
+                        {
+                            "for": {
+                                "in": "pensDown"
+                            }
+                        },
+                        {
+                            "for": {
+                                "in": "error"
                             }
                         },
                         {

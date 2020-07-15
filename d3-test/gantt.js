@@ -25,7 +25,33 @@ d3.gantt = function () {
     return "translate(" + x(d.pmAssignDate) + "," + y(d.projectName) + ")";
   };
 
-  var textTransform = function (d) {
+  var dealsignTransform = function (d) {
+    return "translate(" + x(d.dealSign) + "," + y(d.projectName) + ")";
+  }
+
+  var dealcloseTransform = function (d) {
+    let yOffset = y(d.projectName) + 19;
+    return "translate(" + x(d.dealClose) + "," + yOffset + ")";
+  }
+
+  var day2Transform = function (d) {
+    let yOffset = y(d.projectName) + 19;
+    return "translate(" + x(d.day2) + "," + yOffset + ")";
+  }
+
+  var activeProgramTransform = function (d) {
+    return "translate(" + x(new Date()) + "," + y(d.projectName) + ")";
+  }
+
+  var transitionToSustainingTransform = function (d) {
+    return "translate(" + x(d.endDate) + "," + y(d.projectName) + ")";
+  }
+
+  var pensDownTransform = function (d) {
+    return "translate(" + x(d.endDate) + "," + y(d.projectName) + ")";
+  }
+
+  var errorTransform = function (d) {
     return "translate(" + x(d.pmAssignDate) + "," + y(d.projectName) + ")";
   }
 
@@ -57,12 +83,12 @@ d3.gantt = function () {
   function initAxis() {
     x = d3.scaleTime().domain([timeDomainStart, timeDomainEnd]).range([0, width]).clamp(true);
 
-    y = d3.scaleBand().domain(projects.map(p => p.projectName)).range([0, projects.length * 50]);
+    y = d3.scaleBand().domain(projects.map(p => p.projectName)).range([0, projects.length * 35]);
 
     xAxis = d3.axisTop().scale(x).tickFormat(d3.timeFormat(tickFormat))
       .tickSize(8).ticks(10);
 
-    yAxis = d3.axisLeft().scale(y).tickSize(0);
+    yAxis = d3.axisLeft().scale(y).tickSize(0).ticks(5);
   };
 
   function gantt(projects) {
@@ -96,6 +122,18 @@ d3.gantt = function () {
         return (x(d.endDate) - x(d.pmAssignDate));
       });
 
+    svg.selectAll('.error')
+      .data(projects).enter()
+      .append('rect')
+      .attr('class', 'error')
+      .attr('y', 30)
+      .attr('transform', errorTransform)
+      .attr('height', 1)
+      .attr("display", function (d) { return d.error ? "" : "none" })
+      .attr('width', function (d) {
+        return (x(d.endDate) - x(d.pmAssignDate));
+      })
+
     svg.selectAll(".text")
       .data(projects).enter()
       .append("text")
@@ -111,6 +149,64 @@ d3.gantt = function () {
       .attr("x", -80)
       .attr("y", 40)
       .text(function (d) { return d.pmAssignDate.toLocaleDateString("en-US") });
+
+    svg.selectAll('.icon')
+      .data(projects)
+      .enter().append("image").attr("xlink:href", "svg/dealsign-24px.svg")
+      .attr("transform", dealsignTransform)
+      .attr("display", function (d) { return d.dealSign == null ? "none" : "" })
+      .attr("y", 18)
+      .attr("width", 24)
+      .attr("height", 24);
+    let dealCloseIcon = '<svg width="24" height="24"><circle style="fill: rgb(94, 77, 129);" cx="12" cy="12" r="12" /><text style="fill: rgb(255, 255, 255); fill-rule: evenodd; font-family: &quot;Roboto Slab&quot;; font-size: 22px; white-space: pre;"><tspan x="6" y="19">1</tspan></text></svg>';
+    svg.selectAll('.icon')
+      .data(projects)
+      .enter().append("g")//.attr("xlink:href", "svg/dealclose-day1.svg")
+      .attr("transform", dealcloseTransform)
+      .attr("display", function (d) { return d.dealClose == null ? "none" : "" })
+      .attr("y", 19)
+      .attr("width", 24)
+      .attr("height", 24)
+      .html(dealCloseIcon);
+    let day2Icon =
+      '<svg width="24" height="24"><circle style="fill: rgb(153, 136, 85);" cx="12" cy="12" r="12" /><text style="fill: rgb(255, 255, 255); fill-rule: evenodd; font-family: &quot;Roboto Slab&quot;; font-size: 22px; white-space: pre;"><tspan x="7" y="19">2</tspan></text></svg>';
+    svg.selectAll('.icon')
+      .data(projects)
+      .enter().append("g")//.attr("xlink:href", "svg/day2.svg")
+      .attr("transform", day2Transform)
+      .attr("display", function (d) { return d.day2 == null ? "none" : "" })
+      .attr("class", 'day2')
+      .attr("dy", 19)
+      .attr("width", 24)
+      .attr("height", 24)
+      .html(day2Icon);
+    svg.selectAll('.icon')
+      .data(projects)
+      .enter().append("image").attr("xlink:href", "svg/activeprogram.svg")
+      .attr("transform", activeProgramTransform)
+      .attr("display", function (d) { return !d.pensDown && d.activeProgram ? "" : "none" })
+      .attr("x", -10)
+      .attr("y", 19)
+      .attr("width", 24)
+      .attr("height", 24);
+    svg.selectAll('.icon')
+      .data(projects)
+      .enter().append("image").attr("xlink:href", "svg/transitiontosustaining.svg")
+      .attr("transform", transitionToSustainingTransform)
+      .attr("display", function (d) { return !d.activeProgram && !d.pensDown ? "" : "none" })
+      .attr("x", -10)
+      .attr("y", 19)
+      .attr("width", 24)
+      .attr("height", 24);
+    svg.selectAll('.icon')
+      .data(projects)
+      .enter().append("image").attr("xlink:href", "svg/pensdown-24px.svg")
+      .attr("transform", pensDownTransform)
+      .attr("display", function (d) { return d.pensDown ? "" : "none" })
+      .attr("x", -10)
+      .attr("y", 19)
+      .attr("width", 24)
+      .attr("height", 24);
 
     svg.append("g")
       .attr("class", "x axis")

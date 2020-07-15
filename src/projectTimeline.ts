@@ -1,9 +1,9 @@
 import "./../style/visual.less";
 import { event as d3Event, select as d3Select } from "d3-selection";
 import { scaleLinear, scaleBand, scaleTime, scaleOrdinal } from "d3-scale";
-import { timeMonth } from 'd3-time';
-import { timeFormat } from 'd3-time-format';
-
+import { timeMonth } from "d3-time";
+import { timeFormat } from "d3-time-format";
+import isValid from "date-fns/isValid";
 
 import { axisBottom, axisTop, axisLeft } from "d3-axis";
 
@@ -57,7 +57,12 @@ interface ProjectTimelineRow {
   projectName: string;
   pmAssignDate: Date;
   endDate: Date;
-  milestones: Milestone[];
+  dealSign: Date;
+  dealClose: Date;
+  day2: Date;
+  pensDown: boolean;
+  error: boolean;
+  activeProgram: boolean;
 }
 
 interface Milestone {
@@ -70,31 +75,45 @@ let projects: ProjectTimelineRow[] = [
     projectName: "Altera",
     pmAssignDate: new Date("6/1/2015"),
     endDate: new Date("11/30/2018"),
-    milestones: [
-      {
-        milestoneType: "Deal Sign",
-        milestoneDate: new Date("6/1/2015"),
-      },
-      {
-        milestoneType: "Deal Close/Day 1",
-        milestoneDate: new Date("7/13/2015"),
-      },
-    ],
+    dealSign: new Date("6/1/2015"),
+    dealClose: new Date("7/13/2015"),
+    day2: new Date("7/15/2018"),
+    error: false,
+    activeProgram: false,
+    pensDown: false,
   },
   {
     projectName: "eASIC",
     pmAssignDate: new Date("2/2/2018"),
-    endDate: new Date(""),
-    milestones: [
-      {
-        milestoneType: "Deal Sign",
-        milestoneDate: new Date("8/7/2018"),
-      },
-      {
-        milestoneType: "Deal Close/Day 1",
-        milestoneDate: new Date("9/9/2018"),
-      },
-    ],
+    endDate: new Date(),
+    dealSign: new Date("8/7/2018"),
+    dealClose: new Date("9/9/2018"),
+    day2: null,
+    error: false,
+    activeProgram: true,
+    pensDown: false,
+  },
+  {
+    projectName: "MAVinci GmbH",
+    pmAssignDate: new Date("7/20/2016"),
+    endDate: new Date("12/18/2017"),
+    dealSign: new Date("9/5/2016"),
+    dealClose: new Date("10/1/2016"),
+    day2: new Date("10/10/2017"),
+    error: true,
+    activeProgram: false,
+    pensDown: false,
+  },
+  {
+    projectName: "Pens Down Test",
+    pmAssignDate: new Date("7/20/2016"),
+    endDate: new Date("9/20/2016"),
+    dealSign: null,
+    dealClose: null,
+    day2: null,
+    error: true,
+    activeProgram: false,
+    pensDown: true,
   },
 ];
 
@@ -163,36 +182,89 @@ function visualTransform(
   for (let i = 0, len = Math.max(milestones.length, 0); i < len; i++) {
     let project: ProjectTimelineRow = {
       projectName: milestones[i][0].toString(),
-      pmAssignDate: new Date(),
+      pmAssignDate: new Date(0),
       endDate: new Date(),
-      milestones: [],
+      day2: null,
+      dealClose: null,
+      dealSign: null,
+      activeProgram: false,
+      error: false,
+      pensDown: false,
     };
-    for (let j = 1; j < dataViews[0].table.columns.length; j++) {
-      let milestone: Milestone = {
-        milestoneType: dataViews[0].table.columns[j].displayName,
-        milestoneDate: new Date(milestones[i][j].toString()),
-      };
-      project.milestones.push(milestone);
-    }
-    let pmAssignDate = dataViews[0].table.columns.find(e => e.roles['pmAssign']).index;
-    if(pmAssignDate != null) {
-      project.pmAssignDate = new Date(milestones[i][pmAssignDate].toString());
-    }
-    let endDate = dataViews[0].table.columns.find(e => e.roles['endDate']).index;
-    if(endDate != null) {
-      project.endDate = new Date(milestones[i][endDate].toString());
-    }
+    // for (let j = 1; j < dataViews[0].table.columns.length; j++) {
+    //   let milestone: Milestone = {
+    //     milestoneType: dataViews[0].table.columns[j].displayName,
+    //     milestoneDate: new Date(milestones[i][j].toString()),
+    //   };
+    //   project.milestones.push(milestone);
+    // }
+
+    project = populateProjectWithRoles(project, milestones, i, dataViews);
 
     projects.push(project);
-  }
-  if(projects.length > 0) {
-    debugger;
+    projects.sort(function (a, b) {
+      return a.pmAssignDate.getTime() - b.pmAssignDate.getTime();
+    });
   }
 
   return {
     projects,
     settings: projectTimelineSettings,
   };
+}
+
+function populateProjectWithRoles(
+  project: ProjectTimelineRow,
+  milestones,
+  index,
+  dataViews
+) {
+  let pmAssignDate = getRoleIndex(dataViews, "pmAssign");
+  if (pmAssignDate != null) {
+    project.pmAssignDate = new Date(milestones[index][pmAssignDate].toString());
+  }
+  let endDateIdx = getRoleIndex(dataViews, "endDate");
+  if (endDateIdx != null) {
+    let endDate = new Date(milestones[index][endDateIdx].toString());
+    if (isValid(endDate)) {
+      project.endDate = endDate;
+      project.activeProgram = false;
+    } else {
+      project.endDate = new Date();
+      project.activeProgram = true;
+    }
+  } else {
+    project.activeProgram = true;
+  }
+  let dealSign = getRoleIndex(dataViews, "dealSign");
+  if (dealSign != null) {
+    project.dealSign = new Date(milestones[index][dealSign].toString());
+  }
+  let dealClose = getRoleIndex(dataViews, "dealClose");
+  if (dealClose != null) {
+    project.dealClose = new Date(milestones[index][dealClose].toString());
+  }
+  let day2 = getRoleIndex(dataViews, "day2");
+  if (day2 != null) {
+    project.day2 = new Date(milestones[index][day2].toString());
+  }
+  let error = getRoleIndex(dataViews, "error");
+  if (error != null) {
+    project.error = milestones[index][error];
+  }
+  let pensDown = getRoleIndex(dataViews, "pensDown");
+  if (pensDown != null) {
+    project.pensDown = milestones[index][pensDown];
+    if (project.pensDown) {
+      project.activeProgram = false;
+    }
+  }
+
+  return project;
+}
+
+function getRoleIndex(dataView, role) {
+  return dataView[0].table.columns.find((e) => e.roles[role]).index;
 }
 
 function getColumnStrokeColor(
@@ -264,8 +336,14 @@ export class ProjectTimeline implements IVisual {
       .attr("transform", "translate(0, 20)")
       .classed("projectContainer", true);
 
-    this.xAxis = this.projectContainer.append("g").attr("class", "x axis").classed("xAxis", true);
-    this.yAxis = this.projectContainer.append("g").attr("class", "y axis").classed("yAxis", true);
+    this.xAxis = this.projectContainer
+      .append("g")
+      .attr("class", "x axis")
+      .classed("xAxis", true);
+    this.yAxis = this.projectContainer
+      .append("g")
+      .attr("class", "y axis")
+      .classed("yAxis", true);
 
     // this.initAverageLine();
 
@@ -284,9 +362,7 @@ export class ProjectTimeline implements IVisual {
     );
     let settings = (this.projectTimelineSettings = viewModel.settings);
     this.projects = viewModel.projects;
-    if(this.projects.length > 0) {
-      debugger;
-    }
+    debugger;
 
     // Turn on landing page in capabilities and remove comment to turn on landing page!
     // this.HandleLandingPage(options);
@@ -300,20 +376,26 @@ export class ProjectTimeline implements IVisual {
     // let yScale = scaleLinear()
     //     .domain([0, viewModel.dataMax])
     //     .range([height, 0]);
-    let y = scaleBand().domain(this.projects.map(p => p.projectName)).range([0, this.projects.length * 50]);
+    let y = scaleBand()
+      .domain(this.projects.map((p) => p.projectName))
+      .range([0, this.projects.length * 35]);
     //let yScale = scaleOrdinal().domain(this.projects.map(p => p.projectName)).range([0, this.projects.length]);
 
-    let timeDomainStart = timeMonth.offset(this.firstStartDate(this.projects), -5);
+    let timeDomainStart = timeMonth.offset(
+      this.firstStartDate(this.projects),
+      -5
+    );
     let timeDomainEnd = timeMonth.offset(this.lastEndDate(this.projects), 2);
 
     let x = scaleTime()
-      .domain([
-        timeDomainStart,
-        timeDomainEnd,
-      ])
-      .rangeRound([0, width]).nice();
+      .domain([timeDomainStart, timeDomainEnd])
+      .rangeRound([0, width])
+      .nice();
 
-    let xAxis = axisTop(x).tickFormat(timeFormat(this.tickFormat)).tickSize(8).ticks(10);
+    let xAxis = axisTop(x)
+      .tickFormat(timeFormat(this.tickFormat))
+      .tickSize(8)
+      .ticks(10);
     let yAxis = axisLeft(y).tickSize(0);
     this.xAxis.call(xAxis);
     this.yAxis.call(yAxis);
@@ -334,9 +416,39 @@ export class ProjectTimeline implements IVisual {
       return "translate(" + x(d.pmAssignDate) + "," + y(d.projectName) + ")";
     };
 
+    var innerIconTransform = function (icon) {
+      return (d) => {
+        let yOffset = y(d.projectName) + 18;
+        let xOffset = 0;
+        if (d[icon] != null && isValid(d[icon])) {
+          xOffset = x(d[icon]);
+        }
+        return "translate(" + xOffset + "," + yOffset + ")";
+      }
+    }
+
+    var endIconTransform = function (icon) {
+      return (d) => {
+        if (icon === 'activeProgram') {
+          let yOffset = y(d.projectName) + 18;
+          return "translate(" + x(new Date()) + "," + yOffset + ")";
+        }
+        else {
+          let yOffset = y(d.projectName) + 18;
+          return "translate(" + x(d.endDate) + "," + yOffset + ")";
+        }
+      }
+    }
+
+    var errorTransform = function (d) {
+      return "translate(" + x(d.pmAssignDate) + "," + y(d.projectName) + ")";
+    };
+
     this.projectContainer.selectAll(".bar").remove();
-    this.projectContainer.selectAll(".chart")
-      .data(this.projects, keyFunction).enter()
+    this.projectContainer
+      .selectAll(".chart")
+      .data(this.projects, keyFunction)
+      .enter()
       .append("rect")
       .attr("rx", 0)
       .attr("ry", 0)
@@ -345,26 +457,108 @@ export class ProjectTimeline implements IVisual {
       })
       .attr("y", 20)
       .attr("transform", rectTransform)
-      .attr("height", function (d) { return 20; })
+      .attr("height", function (d) {
+        return 20;
+      })
       .attr("width", function (d) {
-        return (x(d.endDate) - x(d.pmAssignDate));
+        return x(d.endDate) - x(d.pmAssignDate);
       });
 
     this.projectContainer.selectAll(".label").remove();
-    this.projectContainer.selectAll(".text")
-      .data(this.projects).enter()
+    this.projectContainer
+      .selectAll(".text")
+      .data(this.projects)
+      .enter()
       .append("text")
       .attr("class", "label")
       .attr("transform", rectTransform)
       .attr("x", -80)
       .attr("y", 25)
-      .text(function (d) { return d.projectName })
+      .text(function (d) {
+        return d.projectName;
+      })
       .append("tspan")
       .attr("class", "label")
       .attr("transform", rectTransform)
       .attr("x", -80)
       .attr("y", 40)
-      .text(function (d) { return d.pmAssignDate.toLocaleDateString("en-US") });
+      .text(function (d) {
+        return d.pmAssignDate.toLocaleDateString("en-US");
+      });
+
+    this.projectContainer.selectAll('.error').remove();
+    this.projectContainer
+      .selectAll(".error")
+      .data(this.projects)
+      .enter()
+      .append("rect")
+      .attr("class", "error")
+      .attr("y", 30)
+      .attr("transform", errorTransform)
+      .attr("height", 1)
+      .attr("display", function (d) {
+        return d.error ? "" : "none";
+      })
+      .attr("width", function (d) {
+        return x(d.endDate) - x(d.pmAssignDate);
+      });
+
+    this.projectContainer.selectAll(".icon").remove();
+    let dealSignIcon =
+      '<g><path d="M0 0h24v24H0z" fill="none" /><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" fill="#cc681f" /></g>';
+    this.renderIcon(this.projectContainer, 'dealSign', dealSignIcon, innerIconTransform('dealSign'),
+      function (d) {
+        return d.dealSign == null || !isValid(d.dealSign) ? "none" : "";
+      }
+      , this.projects);
+
+    let dealCloseIcon =
+      '<svg width="24" height="24"><circle style="fill: rgb(94, 77, 129);" cx="12" cy="12" r="12" /><text style="fill: rgb(255, 255, 255); fill-rule: evenodd; font-family: &quot;Roboto Slab&quot;; font-size: 22px; white-space: pre;"><tspan x="6" y="19">1</tspan></text></svg>';
+    this.renderIcon(this.projectContainer, 'dealClose', dealCloseIcon, innerIconTransform('dealClose'),
+      function (d) {
+        return d.dealClose == null || !isValid(d.dealClose) ? "none" : "";
+      }
+      , this.projects);
+
+    let day2Icon =
+      '<svg width="24" height="24"><circle style="fill: rgb(153, 136, 85);" cx="12" cy="12" r="12" /><text style="fill: rgb(255, 255, 255); fill-rule: evenodd; font-family: &quot;Roboto Slab&quot;; font-size: 22px; white-space: pre;"><tspan x="7" y="19">2</tspan></text></svg>';
+    this.renderIcon(this.projectContainer, 'day2', day2Icon, innerIconTransform('day2'),
+      function (d) {
+        return d.day2 == null || !isValid(d.day2) ? "none" : "";
+      }, this.projects);
+
+    let activeProgramIcon =
+      '<path d="M0 0h24v24H0z" fill="none" /><path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z" fill="#29416c" />';
+    this.renderIcon(this.projectContainer, 'activeProgram', activeProgramIcon, endIconTransform('activeProgram'),
+      function (d) {
+        return !d.pensDown && d.activeProgram ? "" : "none";
+      }, this.projects);
+
+    let transitionToSustainingIcon = '<path d="M0 0h24v24H0z" fill="none" /><path d="M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2z" fill="green" />';
+    this.renderIcon(this.projectContainer, 'transitionToSustaining', transitionToSustainingIcon, endIconTransform('transitionToSustaining'), function (d) {
+      return !d.activeProgram && !d.pensDown ? "" : "none";
+    }, this.projects);
+
+    let pensDownIcon = '<path d="M0 0h24v24H0z" fill="none" /><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" fill="red" />';
+    this.renderIcon(this.projectContainer, 'pensDown', pensDownIcon, endIconTransform('pensDown'),
+      function (d) {
+        return d.pensDown ? "" : "none";
+      }, this.projects);
+  }
+
+  private renderIcon(svgContainer: Selection<SVGElement, SVGElement>, iconType: string, iconSvg: string, transformFunction: (string) => string, displayFunction: (string) => string, projects: ProjectTimelineRow[]) {
+    svgContainer
+      .selectAll(".chart")
+      .data(this.projects)
+      .enter()
+      .append("g")
+      .attr("class", iconType + " icon")
+      .attr("transform", transformFunction)
+      .attr("display", displayFunction)
+      .attr("y", 19)
+      .attr("width", 24)
+      .attr("height", 24)
+      .html(iconSvg);
   }
 
   private firstStartDate(projects: ProjectTimelineRow[]): Date {

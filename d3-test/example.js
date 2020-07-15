@@ -3,46 +3,45 @@ var projects = [
         projectName: "Altera",
         pmAssignDate: new Date("6/1/2015"),
         endDate: new Date("11/30/2018"),
-        milestones: [
-            {
-                milestoneType: "Deal Sign",
-                milestoneDate: new Date("6/1/2015"),
-            },
-            {
-                milestoneType: "Deal Close/Day 1",
-                milestoneDate: new Date("7/13/2015"),
-            },
-        ],
-    },
-    {
-        projectName: "MAVinci GmbH",
-        pmAssignDate: new Date("7/20/2016"),
-        endDate: new Date("12/18/2017"),
-        milestones: [
-            {
-                milestoneType: "Deal Sign",
-                milestoneDate: new Date("9/18/2016"),
-            },
-            {
-                milestoneType: "Deal Close/Day 1",
-                milestoneDate: new Date("11/13/2016"),
-            },
-        ],
+        dealSign: new Date("6/1/2015"),
+        dealClose: new Date("7/13/2015"),
+        day2: new Date("7/15/2018"),
+        error: false,
+        activeProgram: false,
+        pensDown: false,
     },
     {
         projectName: "eASIC",
         pmAssignDate: new Date("2/2/2018"),
         endDate: new Date(),
-        milestones: [
-            {
-                milestoneType: "Deal Sign",
-                milestoneDate: new Date("8/7/2018"),
-            },
-            {
-                milestoneType: "Deal Close/Day 1",
-                milestoneDate: new Date("9/9/2018"),
-            },
-        ],
+        dealSign: new Date("8/7/2018"),
+        dealClose: new Date("9/9/2018"),
+        day2: null,
+        error: false,
+        activeProgram: true,
+        pensDown: false,
+    },
+    {
+        projectName: "MAVinci GmbH",
+        pmAssignDate: new Date("7/20/2016"),
+        endDate: new Date("12/18/2017"),
+        dealSign: new Date("9/5/2016"),
+        dealClose: new Date("10/1/2016"),
+        day2: new Date("10/10/2017"),
+        error: false,
+        activeProgram: false,
+        pensDown: false,
+    },
+    {
+        projectName: "Pens Down Test",
+        pmAssignDate: new Date("7/20/2016"),
+        endDate: new Date("9/20/2016"),
+        dealSign: null,
+        dealClose: null,
+        day2: null,
+        error: true,
+        activeProgram: false,
+        pensDown: true,
     },
 ];
 
