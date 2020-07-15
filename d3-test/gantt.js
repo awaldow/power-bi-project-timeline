@@ -34,7 +34,8 @@ d3.gantt = function () {
   }
 
   var day2Transform = function (d) {
-    return "translate(" + x(d.day2) + "," + y(d.projectName) + ")";
+    let yOffset = y(d.projectName) + 19;
+    return "translate(" + x(d.day2) + "," + yOffset + ")";
   }
 
   var activeProgramTransform = function (d) {
@@ -165,14 +166,14 @@ d3.gantt = function () {
       .attr("width", 24)
       .attr("height", 24);
     let day2Icon =
-      '<svg width="24" height="24"><circle style="fill: rgb(153, 136, 85);" cx="32.104" cy="32.104" r="32.05" transform="matrix(7.705857, 0, 0, 7.687307, -0.362122, -0.36112)"/><text transform="matrix(12.363564, 0, 0, 13.171527, -280.123444, -346.533875)" style="fill: rgb(255, 255, 255); fill-rule: evenodd; font-family: &quot;Roboto Slab&quot;; font-size: 28px; white-space: pre;"><tspan x="35.077" y="55.291">2</tspan><tspan x="35.077" dy="1em">​</tspan></text></svg>';
+      '<svg width="24" height="24"><circle style="fill: rgb(153, 136, 85);" cx="12" cy="12" r="12" /><text style="fill: rgb(255, 255, 255); fill-rule: evenodd; font-family: &quot;Roboto Slab&quot;; font-size: 22px; white-space: pre;"><tspan x="7" y="19">2</tspan></text></svg>';
     svg.selectAll('.icon')
       .data(projects)
       .enter().append("g")//.attr("xlink:href", "svg/day2.svg")
       .attr("transform", day2Transform)
       .attr("display", function (d) { return d.day2 == null ? "none" : "" })
       .attr("class", 'day2')
-      .attr("y", 19)
+      .attr("dy", 19)
       .attr("width", 24)
       .attr("height", 24)
       .html(day2Icon);

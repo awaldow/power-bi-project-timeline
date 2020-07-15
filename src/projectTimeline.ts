@@ -512,7 +512,7 @@ export class ProjectTimeline implements IVisual {
       , this.projects);
 
     let dealCloseIcon =
-      '<circle style="fill: rgb(94, 77, 129);" cx="32.104" cy="32.104" r="32.05" transform="matrix(7.705857, 0, 0, 7.687307, -0.362122, -0.36112)"/><text transform="matrix(12.363564, 0, 0, 13.171527, -259.909424, -342.372162)" style="fill: rgb(255, 255, 255); fill-rule: evenodd; font-family: &quot;Roboto Slab&quot;; font-size: 28px; white-space: pre;"><tspan x="35.077" y="55.291">1</tspan><tspan x="35.077" dy="1em">​</tspan></text>';
+      '<svg width="24" height="24"><circle style="fill: rgb(94, 77, 129);" cx="12" cy="12" r="12" /><text style="fill: rgb(255, 255, 255); fill-rule: evenodd; font-family: &quot;Roboto Slab&quot;; font-size: 22px; white-space: pre;"><tspan x="7" y="19">1</tspan></text></svg>';
     this.renderIcon(this.projectContainer, 'dealClose', dealCloseIcon, innerIconTransform('dealClose'),
       function (d) {
         return d.dealClose == null || !isValid(d.dealClose) ? "none" : "";
@@ -520,7 +520,7 @@ export class ProjectTimeline implements IVisual {
       , this.projects);
 
     let day2Icon =
-      '<circle style="fill: rgb(153, 136, 85);" cx="32.104" cy="32.104" r="32.05" transform="matrix(7.705857, 0, 0, 7.687307, -0.362122, -0.36112)"/><text transform="matrix(12.363564, 0, 0, 13.171527, -280.123444, -346.533875)" style="fill: rgb(255, 255, 255); fill-rule: evenodd; font-family: &quot;Roboto Slab&quot;; font-size: 28px; white-space: pre;"><tspan x="35.077" y="55.291">2</tspan><tspan x="35.077" dy="1em">​</tspan></text>';
+      '<svg width="24" height="24"><circle style="fill: rgb(153, 136, 85);" cx="12" cy="12" r="12" /><text style="fill: rgb(255, 255, 255); fill-rule: evenodd; font-family: &quot;Roboto Slab&quot;; font-size: 22px; white-space: pre;"><tspan x="7" y="19">2</tspan></text></svg>';
     this.renderIcon(this.projectContainer, 'day2', day2Icon, innerIconTransform('day2'),
       function (d) {
         return d.day2 == null || !isValid(d.day2) ? "none" : "";
