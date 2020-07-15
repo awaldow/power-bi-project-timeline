@@ -136,7 +136,7 @@ function visualTransform(
   host: IVisualHost
 ): ProjectTimelineViewModel {
   /*Convert dataView to your viewModel*/
-  //debugger;
+  
   let dataViews = options.dataViews;
   let defaultSettings: ProjectTimelineSettings = {
     milestonesMarkPhases: {
@@ -333,7 +333,8 @@ export class ProjectTimeline implements IVisual {
 
     this.projectContainer = this.svg
       .append("g")
-      .attr("transform", "translate(0, 20)")
+      //.attr("transform", "translate(0, 20)")
+      .attr("transform", "translate(" + ProjectTimeline.Config.margins.left + ", 20)")
       .classed("projectContainer", true);
 
     this.xAxis = this.projectContainer
@@ -362,7 +363,6 @@ export class ProjectTimeline implements IVisual {
     );
     let settings = (this.projectTimelineSettings = viewModel.settings);
     this.projects = viewModel.projects;
-    debugger;
 
     // Turn on landing page in capabilities and remove comment to turn on landing page!
     // this.HandleLandingPage(options);
