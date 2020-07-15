@@ -181,7 +181,7 @@ function visualTransform(
 
   for (let i = 0, len = Math.max(milestones.length, 0); i < len; i++) {
     let project: ProjectTimelineRow = {
-      projectName: milestones[i][0].toString(),
+      projectName: "",
       pmAssignDate: new Date(0),
       endDate: new Date(),
       day2: null,
@@ -219,6 +219,11 @@ function populateProjectWithRoles(
   index,
   dataViews
 ) {
+  let projectName = getRoleIndex(dataViews, "project");
+  if (projectName != null) {
+    project.projectName = milestones[index][projectName];
+  }
+
   let pmAssignDate = getRoleIndex(dataViews, "pmAssign");
   if (pmAssignDate != null) {
     project.pmAssignDate = new Date(milestones[index][pmAssignDate].toString());
