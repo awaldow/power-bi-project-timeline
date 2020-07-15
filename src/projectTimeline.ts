@@ -136,7 +136,7 @@ function visualTransform(
   host: IVisualHost
 ): ProjectTimelineViewModel {
   /*Convert dataView to your viewModel*/
-  
+
   let dataViews = options.dataViews;
   let defaultSettings: ProjectTimelineSettings = {
     milestonesMarkPhases: {
@@ -304,7 +304,7 @@ export class ProjectTimeline implements IVisual {
     transparentOpacity: 0.4,
     margins: {
       top: 0,
-      right: 0,
+      right: 30,
       bottom: 25,
       left: 30,
     },
@@ -318,10 +318,6 @@ export class ProjectTimeline implements IVisual {
     this.selectionManager = options.host.createSelectionManager();
     this.locale = options.host.locale;
 
-    // this.selectionManager.registerOnSelectCallback(() => {
-    //     this.syncSelectionState(this.projectSelection, <ISelectionId[]>this.selectionManager.getSelectionIds());
-    // });
-
     this.tooltipServiceWrapper = createTooltipServiceWrapper(
       this.host.tooltipService,
       options.element
@@ -333,8 +329,10 @@ export class ProjectTimeline implements IVisual {
 
     this.projectContainer = this.svg
       .append("g")
-      //.attr("transform", "translate(0, 20)")
-      .attr("transform", "translate(" + ProjectTimeline.Config.margins.left + ", 20)")
+      .attr(
+        "transform",
+        "translate(" + ProjectTimeline.Config.margins.left + ", 20)"
+      )
       .classed("projectContainer", true);
 
     this.xAxis = this.projectContainer
@@ -345,15 +343,6 @@ export class ProjectTimeline implements IVisual {
       .append("g")
       .attr("class", "y axis")
       .classed("yAxis", true);
-
-    // this.initAverageLine();
-
-    // const helpLinkElement: Element = this.createHelpLinkElement();
-    // options.element.appendChild(helpLinkElement);
-
-    // this.helpLinkElement = d3Select(helpLinkElement);
-
-    // this.handleContextMenu();
   }
 
   public update(options: VisualUpdateOptions) {
@@ -364,22 +353,13 @@ export class ProjectTimeline implements IVisual {
     let settings = (this.projectTimelineSettings = viewModel.settings);
     this.projects = viewModel.projects;
 
-    // Turn on landing page in capabilities and remove comment to turn on landing page!
-    // this.HandleLandingPage(options);
-
     let width = options.viewport.width;
     let height = options.viewport.height;
 
     this.svg.attr("width", width).attr("height", height);
-    //.style("fill", settings.enableAxis.fill);
-
-    // let yScale = scaleLinear()
-    //     .domain([0, viewModel.dataMax])
-    //     .range([height, 0]);
     let y = scaleBand()
       .domain(this.projects.map((p) => p.projectName))
       .range([0, this.projects.length * 35]);
-    //let yScale = scaleOrdinal().domain(this.projects.map(p => p.projectName)).range([0, this.projects.length]);
 
     let timeDomainStart = timeMonth.offset(
       this.firstStartDate(this.projects),
@@ -389,58 +369,51 @@ export class ProjectTimeline implements IVisual {
 
     let x = scaleTime()
       .domain([timeDomainStart, timeDomainEnd])
-      .rangeRound([0, width])
+      .rangeRound([
+        0,
+        width -
+          ProjectTimeline.Config.margins.left -
+          ProjectTimeline.Config.margins.right,
+      ])
       .nice();
 
-    let xAxis = axisTop(x)
-      .tickFormat(timeFormat(this.tickFormat))
-      .tickSize(8)
-      .ticks(10);
+    let xAxis = axisTop(x).tickFormat(timeFormat(this.tickFormat)).tickSize(8);
     let yAxis = axisLeft(y).tickSize(0);
     this.xAxis.call(xAxis);
     this.yAxis.call(yAxis);
 
-    //let yAxis = axisLeft(yScale);
-
-    // const textNodes = this.xAxis.selectAll("text")
-    //ProjectTimeline.wordBreak(textNodes, xScale.bandwidth(), height);
-
-    // this.projectSelection = this.projectContainer
-    //     .selectAll('.project')
-    //     .data(this.projects);
-    var keyFunction = function (d) {
+    var keyFunction = function (d: ProjectTimelineRow) {
       return d.pmAssignDate + d.projectName + d.endDate;
     };
 
-    var rectTransform = function (d) {
+    var rectTransform = function (d: ProjectTimelineRow) {
       return "translate(" + x(d.pmAssignDate) + "," + y(d.projectName) + ")";
     };
 
-    var innerIconTransform = function (icon) {
-      return (d) => {
+    var innerIconTransform = function (icon: string) {
+      return (d: ProjectTimelineRow) => {
         let yOffset = y(d.projectName) + 18;
         let xOffset = 0;
         if (d[icon] != null && isValid(d[icon])) {
           xOffset = x(d[icon]);
         }
         return "translate(" + xOffset + "," + yOffset + ")";
-      }
-    }
+      };
+    };
 
-    var endIconTransform = function (icon) {
-      return (d) => {
-        if (icon === 'activeProgram') {
+    var endIconTransform = function (icon: string) {
+      return (d: ProjectTimelineRow) => {
+        if (icon === "activeProgram") {
           let yOffset = y(d.projectName) + 18;
           return "translate(" + x(new Date()) + "," + yOffset + ")";
-        }
-        else {
+        } else {
           let yOffset = y(d.projectName) + 18;
           return "translate(" + x(d.endDate) + "," + yOffset + ")";
         }
-      }
-    }
+      };
+    };
 
-    var errorTransform = function (d) {
+    var errorTransform = function (d: ProjectTimelineRow) {
       return "translate(" + x(d.pmAssignDate) + "," + y(d.projectName) + ")";
     };
 
@@ -452,15 +425,11 @@ export class ProjectTimeline implements IVisual {
       .append("rect")
       .attr("rx", 0)
       .attr("ry", 0)
-      .attr("class", function (d) {
-        return "bar";
-      })
+      .attr("class", "bar")
       .attr("y", 20)
       .attr("transform", rectTransform)
-      .attr("height", function (d) {
-        return 20;
-      })
-      .attr("width", function (d) {
+      .attr("height", 20)
+      .attr("width", function (d: ProjectTimelineRow) {
         return x(d.endDate) - x(d.pmAssignDate);
       });
 
@@ -474,7 +443,7 @@ export class ProjectTimeline implements IVisual {
       .attr("transform", rectTransform)
       .attr("x", -80)
       .attr("y", 25)
-      .text(function (d) {
+      .text(function (d: ProjectTimelineRow) {
         return d.projectName;
       })
       .append("tspan")
@@ -482,11 +451,11 @@ export class ProjectTimeline implements IVisual {
       .attr("transform", rectTransform)
       .attr("x", -80)
       .attr("y", 40)
-      .text(function (d) {
+      .text(function (d: ProjectTimelineRow) {
         return d.pmAssignDate.toLocaleDateString("en-US");
       });
 
-    this.projectContainer.selectAll('.error').remove();
+    this.projectContainer.selectAll(".error").remove();
     this.projectContainer
       .selectAll(".error")
       .data(this.projects)
@@ -496,57 +465,94 @@ export class ProjectTimeline implements IVisual {
       .attr("y", 30)
       .attr("transform", errorTransform)
       .attr("height", 1)
-      .attr("display", function (d) {
+      .attr("display", function (d: ProjectTimelineRow) {
         return d.error ? "" : "none";
       })
-      .attr("width", function (d) {
+      .attr("width", function (d: ProjectTimelineRow) {
         return x(d.endDate) - x(d.pmAssignDate);
       });
 
     this.projectContainer.selectAll(".icon").remove();
     let dealSignIcon =
       '<g><path d="M0 0h24v24H0z" fill="none" /><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" fill="#cc681f" /></g>';
-    this.renderIcon(this.projectContainer, 'dealSign', dealSignIcon, innerIconTransform('dealSign'),
-      function (d) {
+    this.renderIcon(
+      this.projectContainer,
+      "dealSign",
+      dealSignIcon,
+      innerIconTransform("dealSign"),
+      function (d: ProjectTimelineRow) {
         return d.dealSign == null || !isValid(d.dealSign) ? "none" : "";
       }
-      , this.projects);
+    );
 
     let dealCloseIcon =
       '<svg width="24" height="24"><circle style="fill: rgb(94, 77, 129);" cx="12" cy="12" r="12" /><text style="fill: rgb(255, 255, 255); fill-rule: evenodd; font-family: &quot;Roboto Slab&quot;; font-size: 22px; white-space: pre;"><tspan x="6" y="19">1</tspan></text></svg>';
-    this.renderIcon(this.projectContainer, 'dealClose', dealCloseIcon, innerIconTransform('dealClose'),
-      function (d) {
+    this.renderIcon(
+      this.projectContainer,
+      "dealClose",
+      dealCloseIcon,
+      innerIconTransform("dealClose"),
+      function (d: ProjectTimelineRow) {
         return d.dealClose == null || !isValid(d.dealClose) ? "none" : "";
       }
-      , this.projects);
+    );
 
     let day2Icon =
       '<svg width="24" height="24"><circle style="fill: rgb(153, 136, 85);" cx="12" cy="12" r="12" /><text style="fill: rgb(255, 255, 255); fill-rule: evenodd; font-family: &quot;Roboto Slab&quot;; font-size: 22px; white-space: pre;"><tspan x="7" y="19">2</tspan></text></svg>';
-    this.renderIcon(this.projectContainer, 'day2', day2Icon, innerIconTransform('day2'),
-      function (d) {
+    this.renderIcon(
+      this.projectContainer,
+      "day2",
+      day2Icon,
+      innerIconTransform("day2"),
+      function (d: ProjectTimelineRow) {
         return d.day2 == null || !isValid(d.day2) ? "none" : "";
-      }, this.projects);
+      }
+    );
 
     let activeProgramIcon =
       '<path d="M0 0h24v24H0z" fill="none" /><path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z" fill="#29416c" />';
-    this.renderIcon(this.projectContainer, 'activeProgram', activeProgramIcon, endIconTransform('activeProgram'),
-      function (d) {
+    this.renderIcon(
+      this.projectContainer,
+      "activeProgram",
+      activeProgramIcon,
+      endIconTransform("activeProgram"),
+      function (d: ProjectTimelineRow) {
         return !d.pensDown && d.activeProgram ? "" : "none";
-      }, this.projects);
+      }
+    );
 
-    let transitionToSustainingIcon = '<path d="M0 0h24v24H0z" fill="none" /><path d="M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2z" fill="green" />';
-    this.renderIcon(this.projectContainer, 'transitionToSustaining', transitionToSustainingIcon, endIconTransform('transitionToSustaining'), function (d) {
-      return !d.activeProgram && !d.pensDown ? "" : "none";
-    }, this.projects);
+    let transitionToSustainingIcon =
+      '<path d="M0 0h24v24H0z" fill="none" /><path d="M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2z" fill="green" />';
+    this.renderIcon(
+      this.projectContainer,
+      "transitionToSustaining",
+      transitionToSustainingIcon,
+      endIconTransform("transitionToSustaining"),
+      function (d: ProjectTimelineRow) {
+        return !d.activeProgram && !d.pensDown ? "" : "none";
+      }
+    );
 
-    let pensDownIcon = '<path d="M0 0h24v24H0z" fill="none" /><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" fill="red" />';
-    this.renderIcon(this.projectContainer, 'pensDown', pensDownIcon, endIconTransform('pensDown'),
-      function (d) {
+    let pensDownIcon =
+      '<path d="M0 0h24v24H0z" fill="none" /><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" fill="red" />';
+    this.renderIcon(
+      this.projectContainer,
+      "pensDown",
+      pensDownIcon,
+      endIconTransform("pensDown"),
+      function (d: ProjectTimelineRow) {
         return d.pensDown ? "" : "none";
-      }, this.projects);
+      }
+    );
   }
 
-  private renderIcon(svgContainer: Selection<SVGElement, SVGElement>, iconType: string, iconSvg: string, transformFunction: (string) => string, displayFunction: (string) => string, projects: ProjectTimelineRow[]) {
+  private renderIcon(
+    svgContainer: Selection<SVGElement, SVGElement>,
+    iconType: string,
+    iconSvg: string,
+    transformFunction: (d: ProjectTimelineRow) => string,
+    displayFunction: (d: ProjectTimelineRow) => string
+  ) {
     svgContainer
       .selectAll(".chart")
       .data(this.projects)
@@ -575,12 +581,6 @@ export class ProjectTimeline implements IVisual {
     );
   }
 
-  /**
-   * Enumerates through the objects defined in the capabilities and adds the properties to the format pane
-   *
-   * @function
-   * @param {EnumerateVisualObjectInstancesOptions} options - Map of defined objects
-   */
   public enumerateObjectInstances(
     options: EnumerateVisualObjectInstancesOptions
   ): VisualObjectInstanceEnumeration {
