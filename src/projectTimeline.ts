@@ -486,6 +486,7 @@ export class ProjectTimeline implements IVisual {
         return d.pmAssignDate.toLocaleDateString("en-US");
       });
 
+    this.projectContainer.selectAll('.error').remove();
     this.projectContainer
       .selectAll(".error")
       .data(this.projects)
