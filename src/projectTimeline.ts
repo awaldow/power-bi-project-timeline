@@ -126,8 +126,8 @@ function visualTransform(
       .createSelectionId();
     let project: ProjectTimelineRow = {
       projectName: "",
-      pmAssignDate: new Date(0),
-      endDate: new Date(),
+      pmAssignDate: null,
+      endDate: null,
       day2: null,
       dealClose: null,
       dealSign: null,
@@ -158,16 +158,16 @@ function populateProjectWithRoles(
   dataViews: powerbiVisualsApi.DataView[]
 ) {
   let projectName = getRoleIndex(dataViews, "project");
-  if (projectName != null) {
+  if (projectName >= 0) {
     project.projectName = milestones[index][projectName].toString();
   }
 
   let pmAssignDate = getRoleIndex(dataViews, "pmAssign");
-  if (pmAssignDate != null) {
+  if (pmAssignDate >= 0) {
     project.pmAssignDate = new Date(milestones[index][pmAssignDate].toString());
   }
   let endDateIdx = getRoleIndex(dataViews, "endDate");
-  if (endDateIdx != null) {
+  if (endDateIdx >= 0) {
     let endDate = new Date(milestones[index][endDateIdx].toString());
     if (isValid(endDate)) {
       project.endDate = endDate;
@@ -180,23 +180,23 @@ function populateProjectWithRoles(
     project.activeProgram = true;
   }
   let dealSign = getRoleIndex(dataViews, "dealSign");
-  if (dealSign != null) {
+  if (dealSign >= 0) {
     project.dealSign = new Date(milestones[index][dealSign].toString());
   }
   let dealClose = getRoleIndex(dataViews, "dealClose");
-  if (dealClose != null) {
+  if (dealClose >= 0) {
     project.dealClose = new Date(milestones[index][dealClose].toString());
   }
   let day2 = getRoleIndex(dataViews, "day2");
-  if (day2 != null) {
+  if (day2 >= 0) {
     project.day2 = new Date(milestones[index][day2].toString());
   }
   let error = getRoleIndex(dataViews, "error");
-  if (error != null) {
+  if (error >= 0) {
     project.error = Boolean(milestones[index][error].valueOf());
   }
   let pensDown = getRoleIndex(dataViews, "pensDown");
-  if (pensDown != null) {
+  if (pensDown >= 0) {
     project.pensDown = Boolean(milestones[index][pensDown].valueOf());
     if (project.pensDown) {
       project.activeProgram = false;
@@ -207,7 +207,12 @@ function populateProjectWithRoles(
 }
 
 function getRoleIndex(dataView: powerbiVisualsApi.DataView[], role: string) {
-  return dataView[0].table.columns.find((e) => e.roles[role]).index;
+  const found = dataView[0].table.columns.find((e) => e.roles[role]);
+  if (found !== undefined) {
+    return found.index;
+  } else {
+    return -1;
+  }
 }
 
 function getColumnStrokeColor(
@@ -372,6 +377,18 @@ export class ProjectTimeline implements IVisual {
       .attr("y", 20)
       .attr("transform", rectTransform)
       .attr("height", 20)
+      .attr("display", function (d: ProjectTimelineRow) {
+        if (
+          d.projectName === "" ||
+          d.error === null ||
+          d.pensDown === null ||
+          d.pmAssignDate === null ||
+          d.endDate === null
+        ) {
+          return "none";
+        }
+        return "";
+      })
       .attr("width", function (d: ProjectTimelineRow) {
         return x(d.endDate) - x(d.pmAssignDate);
       });
@@ -548,7 +565,7 @@ export class ProjectTimeline implements IVisual {
       return new Date(project[icon]).toLocaleDateString("en-US");
     } else {
       if (icon === "activeProgram") {
-        return 'Ongoing';
+        return "Ongoing";
       } else if (icon === "transitionToSustaining" || icon === "pensDown") {
         return project.endDate.toLocaleDateString("en-US");
       }
