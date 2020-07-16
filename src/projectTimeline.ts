@@ -286,22 +286,6 @@ export class ProjectTimeline implements IVisual {
       .append("g")
       .attr("class", "y axis")
       .classed("yAxis", true);
-
-    this.tooltipServiceWrapper.addTooltip(
-      this.projectContainer.selectAll(".bar"),
-      (tooltipEvent: TooltipEventArgs<ProjectTimelineRow>) =>
-        this.getRowTooltipData(tooltipEvent.data),
-      (tooltipEvent: TooltipEventArgs<ProjectTimelineRow>) =>
-        tooltipEvent.data.selectionId
-    );
-
-    this.tooltipServiceWrapper.addTooltip(
-      this.projectContainer.selectAll(".icon"),
-      (tooltipEvent: TooltipEventArgs<ProjectTimelineRow>) =>
-        this.getIconTooltipData(tooltipEvent.data, tooltipEvent.context),
-      (tooltipEvent: TooltipEventArgs<ProjectTimelineRow>) =>
-        tooltipEvent.data.selectionId
-    );
   }
 
   public update(options: VisualUpdateOptions) {
@@ -503,28 +487,46 @@ export class ProjectTimeline implements IVisual {
         return d.pensDown ? "" : "none";
       }
     );
+
+    this.tooltipServiceWrapper.addTooltip(
+      this.projectContainer.selectAll(".bar"),
+      (tooltipEvent: TooltipEventArgs<ProjectTimelineRow>) =>
+        this.getRowTooltipData(tooltipEvent.data),
+      (tooltipEvent: TooltipEventArgs<ProjectTimelineRow>) =>
+        tooltipEvent.data.selectionId
+    );
+
+    this.tooltipServiceWrapper.addTooltip(
+      this.projectContainer.selectAll(".icon"),
+      (tooltipEvent: TooltipEventArgs<ProjectTimelineRow>) =>
+        this.getIconTooltipData(tooltipEvent.data, tooltipEvent.context),
+      (tooltipEvent: TooltipEventArgs<ProjectTimelineRow>) =>
+        tooltipEvent.data.selectionId
+    );
   }
 
   private getRowTooltipData(value: any): VisualTooltipDataItem[] {
+    debugger;
     let language = getLocalizedString(this.locale, "LanguageKey");
     return [
       {
         displayName: value.projectName,
         value: this.getProjectDateRange(value),
         color: "white",
-        header: language && "displayed language " + language,
+        header: "Project",
       },
     ];
   }
 
   private getIconTooltipData(value: any, context: HTMLElement): VisualTooltipDataItem[] {
+    debugger;
     let language = getLocalizedString(this.locale, "LanguageKey");
     return [
       {
         displayName: value.projectName,
         value: this.getIconTooltip(value, context),
         color: "white",
-        header: language && "displayed language " + language,
+        header: "Milestone",
       },
     ];
   }
@@ -557,7 +559,7 @@ export class ProjectTimeline implements IVisual {
     displayFunction: (d: ProjectTimelineRow) => string
   ) {
     svgContainer
-      .selectAll(".chart")
+      .selectAll(".icons")
       .data(this.projects)
       .enter()
       .append("g")

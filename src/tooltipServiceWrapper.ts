@@ -53,7 +53,7 @@ class TooltipServiceWrapper implements ITooltipServiceWrapper {
         getTooltipInfoDelegate: (args: TooltipEventArgs<T>) => VisualTooltipDataItem[],
         getDataPointIdentity: (args: TooltipEventArgs<T>) => ISelectionId,
         reloadTooltipDataOnMouseMove?: boolean): void {
-
+        
         if (!selection || !this.visualHostTooltipService.enabled()) {
             return;
         }
@@ -62,6 +62,7 @@ class TooltipServiceWrapper implements ITooltipServiceWrapper {
 
         // Mouse events
         selection.on("mouseover.tooltip", () => {
+            debugger;
             // Ignore mouseover while handling touch events
             if (!this.canDisplayTooltip(d3Event))
                 return;
@@ -157,6 +158,7 @@ class TooltipServiceWrapper implements ITooltipServiceWrapper {
     }
 
     private makeTooltipEventArgs<T>(rootNode: ContainerElement, isPointerEvent: boolean, isTouchEvent: boolean): TooltipEventArgs<T> {
+        debugger;
         let target = <HTMLElement>(<Event>d3Event).target;
         let data: T = d3Select<HTMLElement, T>(target).datum();
 
