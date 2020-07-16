@@ -42,7 +42,7 @@ import {
   createTooltipServiceWrapper,
   TooltipEventArgs,
   ITooltipServiceWrapper,
-} from "powerbi-visuals-utils-tooltiputils";
+} from "./tooltipServiceWrapper";
 
 interface ProjectTimelineSettings {
   milestonesMarkPhases: {
@@ -490,6 +490,7 @@ export class ProjectTimeline implements IVisual {
 
     this.tooltipServiceWrapper.addTooltip(
       this.projectContainer.selectAll(".bar"),
+      "bar",
       (tooltipEvent: TooltipEventArgs<ProjectTimelineRow>) =>
         this.getRowTooltipData(tooltipEvent.data),
       (tooltipEvent: TooltipEventArgs<ProjectTimelineRow>) =>
@@ -498,6 +499,7 @@ export class ProjectTimeline implements IVisual {
 
     this.tooltipServiceWrapper.addTooltip(
       this.projectContainer.selectAll(".icon"),
+      "icon",
       (tooltipEvent: TooltipEventArgs<ProjectTimelineRow>) =>
         this.getIconTooltipData(tooltipEvent.data, tooltipEvent.context),
       (tooltipEvent: TooltipEventArgs<ProjectTimelineRow>) =>
@@ -506,7 +508,6 @@ export class ProjectTimeline implements IVisual {
   }
 
   private getRowTooltipData(value: any): VisualTooltipDataItem[] {
-    debugger;
     let language = getLocalizedString(this.locale, "LanguageKey");
     return [
       {
@@ -518,27 +519,66 @@ export class ProjectTimeline implements IVisual {
     ];
   }
 
-  private getIconTooltipData(value: any, context: HTMLElement): VisualTooltipDataItem[] {
-    debugger;
+  private getIconTooltipData(
+    value: any,
+    context: HTMLElement
+  ): VisualTooltipDataItem[] {
     let language = getLocalizedString(this.locale, "LanguageKey");
     return [
       {
         displayName: value.projectName,
         value: this.getIconTooltip(value, context),
         color: "white",
-        header: "Milestone",
+        header: this.getIconHeader(context),
       },
     ];
   }
 
-  private getIconTooltip(project: ProjectTimelineRow, context: HTMLElement): string {
-    let icon = '';
+  private getIconTooltip(
+    project: ProjectTimelineRow,
+    context: HTMLElement
+  ): string {
+    let icon = "";
     context.classList.forEach((value, key, list) => {
-      if(value !== 'icon') {
+      if (value !== "icon") {
         icon = value;
       }
     });
+    if (isValid(new Date(project[icon])) && project[icon] instanceof Date) {
+      return new Date(project[icon]).toLocaleDateString("en-US");
+    } else {
+      if (icon === "activeProgram") {
+        return 'Ongoing';
+      } else if (icon === "transitionToSustaining" || icon === "pensDown") {
+        return project.endDate.toLocaleDateString("en-US");
+      }
+    }
     return project[icon];
+  }
+
+  private getIconHeader(context: HTMLElement): string {
+    let icon = "";
+    context.classList.forEach((value, key, list) => {
+      if (value !== "icon") {
+        icon = value;
+      }
+    });
+    return this.deCamelCase(icon);
+  }
+
+  private replaceAt(str, index, replacement) {
+    return (
+      str.substr(0, index) +
+      replacement +
+      str.substr(index + replacement.length)
+    );
+  }
+
+  private deCamelCase(icon: string): string {
+    let converted = icon.repeat(1);
+    converted = this.replaceAt(converted, 0, converted[0].toUpperCase());
+    let splitConverted = converted.split(/(?=[A-Z])/g);
+    return splitConverted.join(" ");
   }
 
   private getProjectDateRange(project: ProjectTimelineRow): string {
