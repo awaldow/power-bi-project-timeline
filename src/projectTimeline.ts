@@ -12,6 +12,8 @@ import {
   getCategoricalObjectValue,
 } from "./objectEnumerationUtility";
 
+import { getLocalizedString } from "./localization/localizationHelper";
+
 import powerbiVisualsApi from "powerbi-visuals-api";
 import powerbi = powerbiVisualsApi;
 
@@ -63,6 +65,7 @@ interface ProjectTimelineRow {
   pensDown: boolean;
   error: boolean;
   activeProgram: boolean;
+  selectionId: ISelectionId;
 }
 
 let viewModel: ProjectTimelineViewModel = {
@@ -117,6 +120,10 @@ function visualTransform(
   const strokeWidth: number = getColumnStrokeWidth(colorPalette.isHighContrast);
 
   for (let i = 0, len = Math.max(milestones.length, 0); i < len; i++) {
+    const selectionId: ISelectionId = host
+      .createSelectionIdBuilder()
+      .withTable(dataViews[0].table, i)
+      .createSelectionId();
     let project: ProjectTimelineRow = {
       projectName: "",
       pmAssignDate: new Date(0),
@@ -127,6 +134,7 @@ function visualTransform(
       activeProgram: false,
       error: false,
       pensDown: false,
+      selectionId,
     };
 
     project = populateProjectWithRoles(project, milestones, i, dataViews);
@@ -185,11 +193,11 @@ function populateProjectWithRoles(
   }
   let error = getRoleIndex(dataViews, "error");
   if (error != null) {
-    project.error = (Boolean)(milestones[index][error].valueOf());
+    project.error = Boolean(milestones[index][error].valueOf());
   }
   let pensDown = getRoleIndex(dataViews, "pensDown");
   if (pensDown != null) {
-    project.pensDown = (Boolean)(milestones[index][pensDown].valueOf());
+    project.pensDown = Boolean(milestones[index][pensDown].valueOf());
     if (project.pensDown) {
       project.activeProgram = false;
     }
@@ -278,6 +286,22 @@ export class ProjectTimeline implements IVisual {
       .append("g")
       .attr("class", "y axis")
       .classed("yAxis", true);
+
+    this.tooltipServiceWrapper.addTooltip(
+      this.projectContainer.selectAll(".bar"),
+      (tooltipEvent: TooltipEventArgs<ProjectTimelineRow>) =>
+        this.getRowTooltipData(tooltipEvent.data),
+      (tooltipEvent: TooltipEventArgs<ProjectTimelineRow>) =>
+        tooltipEvent.data.selectionId
+    );
+
+    this.tooltipServiceWrapper.addTooltip(
+      this.projectContainer.selectAll(".icon"),
+      (tooltipEvent: TooltipEventArgs<ProjectTimelineRow>) =>
+        this.getIconTooltipData(tooltipEvent.data, tooltipEvent.context),
+      (tooltipEvent: TooltipEventArgs<ProjectTimelineRow>) =>
+        tooltipEvent.data.selectionId
+    );
   }
 
   public update(options: VisualUpdateOptions) {
@@ -479,6 +503,50 @@ export class ProjectTimeline implements IVisual {
         return d.pensDown ? "" : "none";
       }
     );
+  }
+
+  private getRowTooltipData(value: any): VisualTooltipDataItem[] {
+    let language = getLocalizedString(this.locale, "LanguageKey");
+    return [
+      {
+        displayName: value.projectName,
+        value: this.getProjectDateRange(value),
+        color: "white",
+        header: language && "displayed language " + language,
+      },
+    ];
+  }
+
+  private getIconTooltipData(value: any, context: HTMLElement): VisualTooltipDataItem[] {
+    let language = getLocalizedString(this.locale, "LanguageKey");
+    return [
+      {
+        displayName: value.projectName,
+        value: this.getIconTooltip(value, context),
+        color: "white",
+        header: language && "displayed language " + language,
+      },
+    ];
+  }
+
+  private getIconTooltip(project: ProjectTimelineRow, context: HTMLElement): string {
+    let icon = '';
+    context.classList.forEach((value, key, list) => {
+      if(value !== 'icon') {
+        icon = value;
+      }
+    });
+    return project[icon];
+  }
+
+  private getProjectDateRange(project: ProjectTimelineRow): string {
+    let ret = project.pmAssignDate.toLocaleDateString("en-US") + " to ";
+    if (isValid(project.endDate)) {
+      ret += project.endDate.toLocaleDateString("en-US");
+    } else {
+      ret += "now";
+    }
+    return ret;
   }
 
   private renderIcon(
