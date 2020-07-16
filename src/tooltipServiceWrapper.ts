@@ -3,7 +3,8 @@ import {
     event as d3Event,
     select as d3Select,
     touches as d3Touches,
-    ContainerElement
+    ContainerElement,
+    BaseType
 } from "d3-selection";
 
 import powerbiVisualsApi from "powerbi-visuals-api";
@@ -22,7 +23,7 @@ export interface TooltipEventArgs<TData> {
 
 export interface ITooltipServiceWrapper {
     addTooltip<T>(
-        selection: Selection<d3.BaseType, any, d3.BaseType, any>,
+        selection: Selection<BaseType, any, BaseType, any>,
         getTooltipInfoDelegate: (args: TooltipEventArgs<T>) => VisualTooltipDataItem[],
         getDataPointIdentity: (args: TooltipEventArgs<T>) => ISelectionId,
         reloadTooltipDataOnMouseMove?: boolean): void;
@@ -48,7 +49,7 @@ class TooltipServiceWrapper implements ITooltipServiceWrapper {
     }
 
     public addTooltip<T>(
-        selection: Selection<d3.BaseType, any, d3.BaseType, any>,
+        selection: Selection<BaseType, any, BaseType, any>,
         getTooltipInfoDelegate: (args: TooltipEventArgs<T>) => VisualTooltipDataItem[],
         getDataPointIdentity: (args: TooltipEventArgs<T>) => ISelectionId,
         reloadTooltipDataOnMouseMove?: boolean): void {

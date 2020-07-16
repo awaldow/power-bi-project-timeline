@@ -145,13 +145,13 @@ function visualTransform(
 
 function populateProjectWithRoles(
   project: ProjectTimelineRow,
-  milestones,
-  index,
-  dataViews
+  milestones: powerbiVisualsApi.DataViewTableRow[],
+  index: number,
+  dataViews: powerbiVisualsApi.DataView[]
 ) {
   let projectName = getRoleIndex(dataViews, "project");
   if (projectName != null) {
-    project.projectName = milestones[index][projectName];
+    project.projectName = milestones[index][projectName].toString();
   }
 
   let pmAssignDate = getRoleIndex(dataViews, "pmAssign");
@@ -185,11 +185,11 @@ function populateProjectWithRoles(
   }
   let error = getRoleIndex(dataViews, "error");
   if (error != null) {
-    project.error = milestones[index][error];
+    project.error = (Boolean)(milestones[index][error].valueOf());
   }
   let pensDown = getRoleIndex(dataViews, "pensDown");
   if (pensDown != null) {
-    project.pensDown = milestones[index][pensDown];
+    project.pensDown = (Boolean)(milestones[index][pensDown].valueOf());
     if (project.pensDown) {
       project.activeProgram = false;
     }
@@ -198,7 +198,7 @@ function populateProjectWithRoles(
   return project;
 }
 
-function getRoleIndex(dataView, role) {
+function getRoleIndex(dataView: powerbiVisualsApi.DataView[], role: string) {
   return dataView[0].table.columns.find((e) => e.roles[role]).index;
 }
 
