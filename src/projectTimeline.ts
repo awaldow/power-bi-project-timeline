@@ -12,6 +12,8 @@ import {
   getCategoricalObjectValue,
 } from "./objectEnumerationUtility";
 
+import { getLocalizedString } from "./localization/localizationHelper";
+
 import powerbiVisualsApi from "powerbi-visuals-api";
 import powerbi = powerbiVisualsApi;
 
@@ -40,7 +42,7 @@ import {
   createTooltipServiceWrapper,
   TooltipEventArgs,
   ITooltipServiceWrapper,
-} from "powerbi-visuals-utils-tooltiputils";
+} from "./tooltipServiceWrapper";
 
 interface ProjectTimelineSettings {
   milestonesMarkPhases: {
@@ -63,80 +65,18 @@ interface ProjectTimelineRow {
   pensDown: boolean;
   error: boolean;
   activeProgram: boolean;
+  selectionId: ISelectionId;
 }
-
-interface Milestone {
-  milestoneType: string;
-  milestoneDate: Date;
-}
-
-let projects: ProjectTimelineRow[] = [
-  {
-    projectName: "Altera",
-    pmAssignDate: new Date("6/1/2015"),
-    endDate: new Date("11/30/2018"),
-    dealSign: new Date("6/1/2015"),
-    dealClose: new Date("7/13/2015"),
-    day2: new Date("7/15/2018"),
-    error: false,
-    activeProgram: false,
-    pensDown: false,
-  },
-  {
-    projectName: "eASIC",
-    pmAssignDate: new Date("2/2/2018"),
-    endDate: new Date(),
-    dealSign: new Date("8/7/2018"),
-    dealClose: new Date("9/9/2018"),
-    day2: null,
-    error: false,
-    activeProgram: true,
-    pensDown: false,
-  },
-  {
-    projectName: "MAVinci GmbH",
-    pmAssignDate: new Date("7/20/2016"),
-    endDate: new Date("12/18/2017"),
-    dealSign: new Date("9/5/2016"),
-    dealClose: new Date("10/1/2016"),
-    day2: new Date("10/10/2017"),
-    error: true,
-    activeProgram: false,
-    pensDown: false,
-  },
-  {
-    projectName: "Pens Down Test",
-    pmAssignDate: new Date("7/20/2016"),
-    endDate: new Date("9/20/2016"),
-    dealSign: null,
-    dealClose: null,
-    day2: null,
-    error: true,
-    activeProgram: false,
-    pensDown: true,
-  },
-];
 
 let viewModel: ProjectTimelineViewModel = {
-  projects,
+  projects: [],
   settings: <ProjectTimelineSettings>{},
 };
 
-/**
- * Function that converts queried data into a view model that will be used by the visual
- *
- * @function
- * @param {VisualUpdateOptions} options - Contains references to the size of the container
- *                                        and the dataView which contains all the data
- *                                        the visual had queried.
- * @param {IVisualHost} host            - Contains references to the host which contains services
- */
 function visualTransform(
   options: VisualUpdateOptions,
   host: IVisualHost
 ): ProjectTimelineViewModel {
-  /*Convert dataView to your viewModel*/
-  //debugger;
   let dataViews = options.dataViews;
   let defaultSettings: ProjectTimelineSettings = {
     milestonesMarkPhases: {
@@ -180,24 +120,22 @@ function visualTransform(
   const strokeWidth: number = getColumnStrokeWidth(colorPalette.isHighContrast);
 
   for (let i = 0, len = Math.max(milestones.length, 0); i < len; i++) {
+    const selectionId: ISelectionId = host
+      .createSelectionIdBuilder()
+      .withTable(dataViews[0].table, i)
+      .createSelectionId();
     let project: ProjectTimelineRow = {
-      projectName: milestones[i][0].toString(),
-      pmAssignDate: new Date(0),
-      endDate: new Date(),
+      projectName: "",
+      pmAssignDate: null,
+      endDate: null,
       day2: null,
       dealClose: null,
       dealSign: null,
       activeProgram: false,
       error: false,
       pensDown: false,
+      selectionId,
     };
-    // for (let j = 1; j < dataViews[0].table.columns.length; j++) {
-    //   let milestone: Milestone = {
-    //     milestoneType: dataViews[0].table.columns[j].displayName,
-    //     milestoneDate: new Date(milestones[i][j].toString()),
-    //   };
-    //   project.milestones.push(milestone);
-    // }
 
     project = populateProjectWithRoles(project, milestones, i, dataViews);
 
@@ -215,16 +153,21 @@ function visualTransform(
 
 function populateProjectWithRoles(
   project: ProjectTimelineRow,
-  milestones,
-  index,
-  dataViews
+  milestones: powerbiVisualsApi.DataViewTableRow[],
+  index: number,
+  dataViews: powerbiVisualsApi.DataView[]
 ) {
+  let projectName = getRoleIndex(dataViews, "project");
+  if (projectName >= 0) {
+    project.projectName = milestones[index][projectName].toString();
+  }
+
   let pmAssignDate = getRoleIndex(dataViews, "pmAssign");
-  if (pmAssignDate != null) {
+  if (pmAssignDate >= 0) {
     project.pmAssignDate = new Date(milestones[index][pmAssignDate].toString());
   }
   let endDateIdx = getRoleIndex(dataViews, "endDate");
-  if (endDateIdx != null) {
+  if (endDateIdx >= 0) {
     let endDate = new Date(milestones[index][endDateIdx].toString());
     if (isValid(endDate)) {
       project.endDate = endDate;
@@ -237,24 +180,24 @@ function populateProjectWithRoles(
     project.activeProgram = true;
   }
   let dealSign = getRoleIndex(dataViews, "dealSign");
-  if (dealSign != null) {
+  if (dealSign >= 0) {
     project.dealSign = new Date(milestones[index][dealSign].toString());
   }
   let dealClose = getRoleIndex(dataViews, "dealClose");
-  if (dealClose != null) {
+  if (dealClose >= 0) {
     project.dealClose = new Date(milestones[index][dealClose].toString());
   }
   let day2 = getRoleIndex(dataViews, "day2");
-  if (day2 != null) {
+  if (day2 >= 0) {
     project.day2 = new Date(milestones[index][day2].toString());
   }
   let error = getRoleIndex(dataViews, "error");
-  if (error != null) {
-    project.error = milestones[index][error];
+  if (error >= 0) {
+    project.error = Boolean(milestones[index][error].valueOf());
   }
   let pensDown = getRoleIndex(dataViews, "pensDown");
-  if (pensDown != null) {
-    project.pensDown = milestones[index][pensDown];
+  if (pensDown >= 0) {
+    project.pensDown = Boolean(milestones[index][pensDown].valueOf());
     if (project.pensDown) {
       project.activeProgram = false;
     }
@@ -263,8 +206,13 @@ function populateProjectWithRoles(
   return project;
 }
 
-function getRoleIndex(dataView, role) {
-  return dataView[0].table.columns.find((e) => e.roles[role]).index;
+function getRoleIndex(dataView: powerbiVisualsApi.DataView[], role: string) {
+  const found = dataView[0].table.columns.find((e) => e.roles[role]);
+  if (found !== undefined) {
+    return found.index;
+  } else {
+    return -1;
+  }
 }
 
 function getColumnStrokeColor(
@@ -304,7 +252,7 @@ export class ProjectTimeline implements IVisual {
     transparentOpacity: 0.4,
     margins: {
       top: 0,
-      right: 0,
+      right: 30,
       bottom: 25,
       left: 30,
     },
@@ -318,10 +266,6 @@ export class ProjectTimeline implements IVisual {
     this.selectionManager = options.host.createSelectionManager();
     this.locale = options.host.locale;
 
-    // this.selectionManager.registerOnSelectCallback(() => {
-    //     this.syncSelectionState(this.projectSelection, <ISelectionId[]>this.selectionManager.getSelectionIds());
-    // });
-
     this.tooltipServiceWrapper = createTooltipServiceWrapper(
       this.host.tooltipService,
       options.element
@@ -333,7 +277,10 @@ export class ProjectTimeline implements IVisual {
 
     this.projectContainer = this.svg
       .append("g")
-      .attr("transform", "translate(0, 20)")
+      .attr(
+        "transform",
+        "translate(" + ProjectTimeline.Config.margins.left + ", 20)"
+      )
       .classed("projectContainer", true);
 
     this.xAxis = this.projectContainer
@@ -344,15 +291,6 @@ export class ProjectTimeline implements IVisual {
       .append("g")
       .attr("class", "y axis")
       .classed("yAxis", true);
-
-    // this.initAverageLine();
-
-    // const helpLinkElement: Element = this.createHelpLinkElement();
-    // options.element.appendChild(helpLinkElement);
-
-    // this.helpLinkElement = d3Select(helpLinkElement);
-
-    // this.handleContextMenu();
   }
 
   public update(options: VisualUpdateOptions) {
@@ -362,24 +300,14 @@ export class ProjectTimeline implements IVisual {
     );
     let settings = (this.projectTimelineSettings = viewModel.settings);
     this.projects = viewModel.projects;
-    debugger;
-
-    // Turn on landing page in capabilities and remove comment to turn on landing page!
-    // this.HandleLandingPage(options);
 
     let width = options.viewport.width;
     let height = options.viewport.height;
 
     this.svg.attr("width", width).attr("height", height);
-    //.style("fill", settings.enableAxis.fill);
-
-    // let yScale = scaleLinear()
-    //     .domain([0, viewModel.dataMax])
-    //     .range([height, 0]);
     let y = scaleBand()
       .domain(this.projects.map((p) => p.projectName))
       .range([0, this.projects.length * 35]);
-    //let yScale = scaleOrdinal().domain(this.projects.map(p => p.projectName)).range([0, this.projects.length]);
 
     let timeDomainStart = timeMonth.offset(
       this.firstStartDate(this.projects),
@@ -389,58 +317,51 @@ export class ProjectTimeline implements IVisual {
 
     let x = scaleTime()
       .domain([timeDomainStart, timeDomainEnd])
-      .rangeRound([0, width])
+      .rangeRound([
+        0,
+        width -
+          ProjectTimeline.Config.margins.left -
+          ProjectTimeline.Config.margins.right,
+      ])
       .nice();
 
-    let xAxis = axisTop(x)
-      .tickFormat(timeFormat(this.tickFormat))
-      .tickSize(8)
-      .ticks(10);
+    let xAxis = axisTop(x).tickFormat(timeFormat(this.tickFormat)).tickSize(8);
     let yAxis = axisLeft(y).tickSize(0);
     this.xAxis.call(xAxis);
     this.yAxis.call(yAxis);
 
-    //let yAxis = axisLeft(yScale);
-
-    // const textNodes = this.xAxis.selectAll("text")
-    //ProjectTimeline.wordBreak(textNodes, xScale.bandwidth(), height);
-
-    // this.projectSelection = this.projectContainer
-    //     .selectAll('.project')
-    //     .data(this.projects);
-    var keyFunction = function (d) {
+    var keyFunction = function (d: ProjectTimelineRow) {
       return d.pmAssignDate + d.projectName + d.endDate;
     };
 
-    var rectTransform = function (d) {
+    var rectTransform = function (d: ProjectTimelineRow) {
       return "translate(" + x(d.pmAssignDate) + "," + y(d.projectName) + ")";
     };
 
-    var innerIconTransform = function (icon) {
-      return (d) => {
+    var innerIconTransform = function (icon: string) {
+      return (d: ProjectTimelineRow) => {
         let yOffset = y(d.projectName) + 18;
         let xOffset = 0;
         if (d[icon] != null && isValid(d[icon])) {
           xOffset = x(d[icon]);
         }
         return "translate(" + xOffset + "," + yOffset + ")";
-      }
-    }
+      };
+    };
 
-    var endIconTransform = function (icon) {
-      return (d) => {
-        if (icon === 'activeProgram') {
+    var endIconTransform = function (icon: string) {
+      return (d: ProjectTimelineRow) => {
+        if (icon === "activeProgram") {
           let yOffset = y(d.projectName) + 18;
           return "translate(" + x(new Date()) + "," + yOffset + ")";
-        }
-        else {
+        } else {
           let yOffset = y(d.projectName) + 18;
           return "translate(" + x(d.endDate) + "," + yOffset + ")";
         }
-      }
-    }
+      };
+    };
 
-    var errorTransform = function (d) {
+    var errorTransform = function (d: ProjectTimelineRow) {
       return "translate(" + x(d.pmAssignDate) + "," + y(d.projectName) + ")";
     };
 
@@ -452,15 +373,23 @@ export class ProjectTimeline implements IVisual {
       .append("rect")
       .attr("rx", 0)
       .attr("ry", 0)
-      .attr("class", function (d) {
-        return "bar";
-      })
+      .attr("class", "bar")
       .attr("y", 20)
       .attr("transform", rectTransform)
-      .attr("height", function (d) {
-        return 20;
+      .attr("height", 20)
+      .attr("display", function (d: ProjectTimelineRow) {
+        if (
+          d.projectName === "" ||
+          d.error === null ||
+          d.pensDown === null ||
+          d.pmAssignDate === null ||
+          d.endDate === null
+        ) {
+          return "none";
+        }
+        return "";
       })
-      .attr("width", function (d) {
+      .attr("width", function (d: ProjectTimelineRow) {
         return x(d.endDate) - x(d.pmAssignDate);
       });
 
@@ -474,7 +403,7 @@ export class ProjectTimeline implements IVisual {
       .attr("transform", rectTransform)
       .attr("x", -80)
       .attr("y", 25)
-      .text(function (d) {
+      .text(function (d: ProjectTimelineRow) {
         return d.projectName;
       })
       .append("tspan")
@@ -482,11 +411,11 @@ export class ProjectTimeline implements IVisual {
       .attr("transform", rectTransform)
       .attr("x", -80)
       .attr("y", 40)
-      .text(function (d) {
+      .text(function (d: ProjectTimelineRow) {
         return d.pmAssignDate.toLocaleDateString("en-US");
       });
 
-    this.projectContainer.selectAll('.error').remove();
+    this.projectContainer.selectAll(".error").remove();
     this.projectContainer
       .selectAll(".error")
       .data(this.projects)
@@ -496,59 +425,198 @@ export class ProjectTimeline implements IVisual {
       .attr("y", 30)
       .attr("transform", errorTransform)
       .attr("height", 1)
-      .attr("display", function (d) {
+      .attr("display", function (d: ProjectTimelineRow) {
         return d.error ? "" : "none";
       })
-      .attr("width", function (d) {
+      .attr("width", function (d: ProjectTimelineRow) {
         return x(d.endDate) - x(d.pmAssignDate);
       });
 
     this.projectContainer.selectAll(".icon").remove();
     let dealSignIcon =
       '<g><path d="M0 0h24v24H0z" fill="none" /><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" fill="#cc681f" /></g>';
-    this.renderIcon(this.projectContainer, 'dealSign', dealSignIcon, innerIconTransform('dealSign'),
-      function (d) {
+    this.renderIcon(
+      this.projectContainer,
+      "dealSign",
+      dealSignIcon,
+      innerIconTransform("dealSign"),
+      function (d: ProjectTimelineRow) {
         return d.dealSign == null || !isValid(d.dealSign) ? "none" : "";
       }
-      , this.projects);
+    );
 
     let dealCloseIcon =
       '<svg width="24" height="24"><circle style="fill: rgb(94, 77, 129);" cx="12" cy="12" r="12" /><text style="fill: rgb(255, 255, 255); fill-rule: evenodd; font-family: &quot;Roboto Slab&quot;; font-size: 22px; white-space: pre;"><tspan x="6" y="19">1</tspan></text></svg>';
-    this.renderIcon(this.projectContainer, 'dealClose', dealCloseIcon, innerIconTransform('dealClose'),
-      function (d) {
+    this.renderIcon(
+      this.projectContainer,
+      "dealClose",
+      dealCloseIcon,
+      innerIconTransform("dealClose"),
+      function (d: ProjectTimelineRow) {
         return d.dealClose == null || !isValid(d.dealClose) ? "none" : "";
       }
-      , this.projects);
+    );
 
     let day2Icon =
       '<svg width="24" height="24"><circle style="fill: rgb(153, 136, 85);" cx="12" cy="12" r="12" /><text style="fill: rgb(255, 255, 255); fill-rule: evenodd; font-family: &quot;Roboto Slab&quot;; font-size: 22px; white-space: pre;"><tspan x="7" y="19">2</tspan></text></svg>';
-    this.renderIcon(this.projectContainer, 'day2', day2Icon, innerIconTransform('day2'),
-      function (d) {
+    this.renderIcon(
+      this.projectContainer,
+      "day2",
+      day2Icon,
+      innerIconTransform("day2"),
+      function (d: ProjectTimelineRow) {
         return d.day2 == null || !isValid(d.day2) ? "none" : "";
-      }, this.projects);
+      }
+    );
 
     let activeProgramIcon =
       '<path d="M0 0h24v24H0z" fill="none" /><path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z" fill="#29416c" />';
-    this.renderIcon(this.projectContainer, 'activeProgram', activeProgramIcon, endIconTransform('activeProgram'),
-      function (d) {
+    this.renderIcon(
+      this.projectContainer,
+      "activeProgram",
+      activeProgramIcon,
+      endIconTransform("activeProgram"),
+      function (d: ProjectTimelineRow) {
         return !d.pensDown && d.activeProgram ? "" : "none";
-      }, this.projects);
+      }
+    );
 
-    let transitionToSustainingIcon = '<path d="M0 0h24v24H0z" fill="none" /><path d="M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2z" fill="green" />';
-    this.renderIcon(this.projectContainer, 'transitionToSustaining', transitionToSustainingIcon, endIconTransform('transitionToSustaining'), function (d) {
-      return !d.activeProgram && !d.pensDown ? "" : "none";
-    }, this.projects);
+    let transitionToSustainingIcon =
+      '<path d="M0 0h24v24H0z" fill="none" /><path d="M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2z" fill="green" />';
+    this.renderIcon(
+      this.projectContainer,
+      "transitionToSustaining",
+      transitionToSustainingIcon,
+      endIconTransform("transitionToSustaining"),
+      function (d: ProjectTimelineRow) {
+        return !d.activeProgram && !d.pensDown ? "" : "none";
+      }
+    );
 
-    let pensDownIcon = '<path d="M0 0h24v24H0z" fill="none" /><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" fill="red" />';
-    this.renderIcon(this.projectContainer, 'pensDown', pensDownIcon, endIconTransform('pensDown'),
-      function (d) {
+    let pensDownIcon =
+      '<path d="M0 0h24v24H0z" fill="none" /><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" fill="red" />';
+    this.renderIcon(
+      this.projectContainer,
+      "pensDown",
+      pensDownIcon,
+      endIconTransform("pensDown"),
+      function (d: ProjectTimelineRow) {
         return d.pensDown ? "" : "none";
-      }, this.projects);
+      }
+    );
+
+    this.tooltipServiceWrapper.addTooltip(
+      this.projectContainer.selectAll(".bar"),
+      "bar",
+      (tooltipEvent: TooltipEventArgs<ProjectTimelineRow>) =>
+        this.getRowTooltipData(tooltipEvent.data),
+      (tooltipEvent: TooltipEventArgs<ProjectTimelineRow>) =>
+        tooltipEvent.data.selectionId
+    );
+
+    this.tooltipServiceWrapper.addTooltip(
+      this.projectContainer.selectAll(".icon"),
+      "icon",
+      (tooltipEvent: TooltipEventArgs<ProjectTimelineRow>) =>
+        this.getIconTooltipData(tooltipEvent.data, tooltipEvent.context),
+      (tooltipEvent: TooltipEventArgs<ProjectTimelineRow>) =>
+        tooltipEvent.data.selectionId
+    );
   }
 
-  private renderIcon(svgContainer: Selection<SVGElement, SVGElement>, iconType: string, iconSvg: string, transformFunction: (string) => string, displayFunction: (string) => string, projects: ProjectTimelineRow[]) {
+  private getRowTooltipData(value: any): VisualTooltipDataItem[] {
+    let language = getLocalizedString(this.locale, "LanguageKey");
+    return [
+      {
+        displayName: value.projectName,
+        value: this.getProjectDateRange(value),
+        color: "white",
+        header: "Project",
+      },
+    ];
+  }
+
+  private getIconTooltipData(
+    value: any,
+    context: HTMLElement
+  ): VisualTooltipDataItem[] {
+    let language = getLocalizedString(this.locale, "LanguageKey");
+    return [
+      {
+        displayName: value.projectName,
+        value: this.getIconTooltip(value, context),
+        color: "white",
+        header: this.getIconHeader(context),
+      },
+    ];
+  }
+
+  private getIconTooltip(
+    project: ProjectTimelineRow,
+    context: HTMLElement
+  ): string {
+    let icon = "";
+    context.classList.forEach((value, key, list) => {
+      if (value !== "icon") {
+        icon = value;
+      }
+    });
+    if (isValid(new Date(project[icon])) && project[icon] instanceof Date) {
+      return new Date(project[icon]).toLocaleDateString("en-US");
+    } else {
+      if (icon === "activeProgram") {
+        return "Ongoing";
+      } else if (icon === "transitionToSustaining" || icon === "pensDown") {
+        return project.endDate.toLocaleDateString("en-US");
+      }
+    }
+    return project[icon];
+  }
+
+  private getIconHeader(context: HTMLElement): string {
+    let icon = "";
+    context.classList.forEach((value, key, list) => {
+      if (value !== "icon") {
+        icon = value;
+      }
+    });
+    return this.deCamelCase(icon);
+  }
+
+  private replaceAt(str, index, replacement) {
+    return (
+      str.substr(0, index) +
+      replacement +
+      str.substr(index + replacement.length)
+    );
+  }
+
+  private deCamelCase(icon: string): string {
+    let converted = icon.repeat(1);
+    converted = this.replaceAt(converted, 0, converted[0].toUpperCase());
+    let splitConverted = converted.split(/(?=[A-Z])/g);
+    return splitConverted.join(" ");
+  }
+
+  private getProjectDateRange(project: ProjectTimelineRow): string {
+    let ret = project.pmAssignDate.toLocaleDateString("en-US") + " to ";
+    if (isValid(project.endDate)) {
+      ret += project.endDate.toLocaleDateString("en-US");
+    } else {
+      ret += "now";
+    }
+    return ret;
+  }
+
+  private renderIcon(
+    svgContainer: Selection<SVGElement, SVGElement>,
+    iconType: string,
+    iconSvg: string,
+    transformFunction: (d: ProjectTimelineRow) => string,
+    displayFunction: (d: ProjectTimelineRow) => string
+  ) {
     svgContainer
-      .selectAll(".chart")
+      .selectAll(".icons")
       .data(this.projects)
       .enter()
       .append("g")
@@ -575,12 +643,6 @@ export class ProjectTimeline implements IVisual {
     );
   }
 
-  /**
-   * Enumerates through the objects defined in the capabilities and adds the properties to the format pane
-   *
-   * @function
-   * @param {EnumerateVisualObjectInstancesOptions} options - Map of defined objects
-   */
   public enumerateObjectInstances(
     options: EnumerateVisualObjectInstancesOptions
   ): VisualObjectInstanceEnumeration {
