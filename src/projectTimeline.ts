@@ -65,78 +65,15 @@ interface ProjectTimelineRow {
   activeProgram: boolean;
 }
 
-interface Milestone {
-  milestoneType: string;
-  milestoneDate: Date;
-}
-
-let projects: ProjectTimelineRow[] = [
-  {
-    projectName: "Altera",
-    pmAssignDate: new Date("6/1/2015"),
-    endDate: new Date("11/30/2018"),
-    dealSign: new Date("6/1/2015"),
-    dealClose: new Date("7/13/2015"),
-    day2: new Date("7/15/2018"),
-    error: false,
-    activeProgram: false,
-    pensDown: false,
-  },
-  {
-    projectName: "eASIC",
-    pmAssignDate: new Date("2/2/2018"),
-    endDate: new Date(),
-    dealSign: new Date("8/7/2018"),
-    dealClose: new Date("9/9/2018"),
-    day2: null,
-    error: false,
-    activeProgram: true,
-    pensDown: false,
-  },
-  {
-    projectName: "MAVinci GmbH",
-    pmAssignDate: new Date("7/20/2016"),
-    endDate: new Date("12/18/2017"),
-    dealSign: new Date("9/5/2016"),
-    dealClose: new Date("10/1/2016"),
-    day2: new Date("10/10/2017"),
-    error: true,
-    activeProgram: false,
-    pensDown: false,
-  },
-  {
-    projectName: "Pens Down Test",
-    pmAssignDate: new Date("7/20/2016"),
-    endDate: new Date("9/20/2016"),
-    dealSign: null,
-    dealClose: null,
-    day2: null,
-    error: true,
-    activeProgram: false,
-    pensDown: true,
-  },
-];
-
 let viewModel: ProjectTimelineViewModel = {
-  projects,
+  projects: [],
   settings: <ProjectTimelineSettings>{},
 };
 
-/**
- * Function that converts queried data into a view model that will be used by the visual
- *
- * @function
- * @param {VisualUpdateOptions} options - Contains references to the size of the container
- *                                        and the dataView which contains all the data
- *                                        the visual had queried.
- * @param {IVisualHost} host            - Contains references to the host which contains services
- */
 function visualTransform(
   options: VisualUpdateOptions,
   host: IVisualHost
 ): ProjectTimelineViewModel {
-  /*Convert dataView to your viewModel*/
-
   let dataViews = options.dataViews;
   let defaultSettings: ProjectTimelineSettings = {
     milestonesMarkPhases: {
@@ -191,13 +128,6 @@ function visualTransform(
       error: false,
       pensDown: false,
     };
-    // for (let j = 1; j < dataViews[0].table.columns.length; j++) {
-    //   let milestone: Milestone = {
-    //     milestoneType: dataViews[0].table.columns[j].displayName,
-    //     milestoneDate: new Date(milestones[i][j].toString()),
-    //   };
-    //   project.milestones.push(milestone);
-    // }
 
     project = populateProjectWithRoles(project, milestones, i, dataViews);
 
