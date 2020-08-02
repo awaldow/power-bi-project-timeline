@@ -50,7 +50,7 @@ interface ProjectTimelineSettings {
   // };
   showLegend: {
     show: boolean;
-  }
+  };
 }
 
 interface ProjectTimelineViewModel {
@@ -87,7 +87,7 @@ function visualTransform(
     // },
     showLegend: {
       show: true,
-    }
+    },
   };
   let viewModel: ProjectTimelineViewModel = {
     projects: [],
@@ -127,8 +127,8 @@ function visualTransform(
         "showLegend",
         "show",
         defaultSettings.showLegend.show
-      )
-    }
+      ),
+    },
   };
 
   const strokeWidth: number = getColumnStrokeWidth(colorPalette.isHighContrast);
@@ -315,8 +315,10 @@ export class ProjectTimeline implements IVisual {
     let settings = (this.projectTimelineSettings = viewModel.settings);
     this.projects = viewModel.projects;
 
+    let legendHeight = settings.showLegend.show ? 40 : 0;
+
     let width = options.viewport.width;
-    let height = options.viewport.height;
+    let height = options.viewport.height - legendHeight;
 
     this.svg.attr("width", width).attr("height", height);
     let y = scaleBand()
@@ -519,6 +521,15 @@ export class ProjectTimeline implements IVisual {
       }
     );
 
+    let icons = [
+      dealSignIcon,
+      dealCloseIcon,
+      day2Icon,
+      pensDownIcon,
+      activeProgramIcon,
+      transitionToSustainingIcon,
+    ];
+
     this.tooltipServiceWrapper.addTooltip(
       this.projectContainer.selectAll(".bar"),
       "bar",
@@ -536,6 +547,132 @@ export class ProjectTimeline implements IVisual {
       (tooltipEvent: TooltipEventArgs<ProjectTimelineRow>) =>
         tooltipEvent.data.selectionId
     );
+
+    if (settings.showLegend.show === true) {
+      this.showLegend(width, icons);
+      this.projectContainer.attr(
+        "transform",
+        "translate(" +
+          ProjectTimeline.Config.margins.left +
+          ", " +
+          (20 + legendHeight) +
+          ")"
+      );
+    } else {
+      this.hideLegend(this.projectContainer.selectAll(".legend"));
+      this.projectContainer.attr(
+        "transform",
+        "translate(" + ProjectTimeline.Config.margins.left + ", 20)"
+      );
+    }
+  }
+
+  private showLegend(width: number, icons: string[]): void {
+    const legendValues = [
+      "Deal Sign",
+      "Deal Close/Day 1",
+      "Day 2",
+      "Pens Down",
+      "Active Program",
+      "Transition to Sustaining",
+      "Error",
+    ];
+    var legendIconTransform = function(d: string) {
+      let ret = "translate(";
+      let index = ProjectTimeline.getLegendIconXOffset(d);
+      ret += index;
+      ret += ",";
+      ret += "0)";
+      return ret;
+    }
+    var legendTextTransform = function(d: string) {
+      let ret = "translate(";
+      let index = ProjectTimeline.getLegendTextXOffset(d);
+      ret += index;
+      ret += ",";
+      ret += "16)";
+      return ret;
+    };
+    d3Select(".projectTimeline")
+      .selectAll(".legend")
+      .data(legendValues)
+      .enter()
+      .append("g")
+      .attr("class", "legend icon")
+      .attr("width", 24)
+      .attr("height", 24)
+      .attr("transform", legendIconTransform)
+      .html(function (d) {
+        switch (d) {
+          case "Deal Sign":
+            return icons[0];
+          case "Deal Close/Day 1":
+            return icons[1];
+          case "Day 2":
+            return icons[2];
+          case "Pens Down":
+            return icons[3];
+          case "Active Program":
+            return icons[4];
+          case "Transition to Sustaining":
+            return icons[5];
+        }
+      });
+    d3Select(".projectTimeline")
+      .selectAll(".legend-text")
+      .data(legendValues)
+      .enter()
+      .append("text")
+      .attr("class", "legend-text")
+      .attr("width", 100)
+      .attr("height", 24)
+      .attr("transform", legendTextTransform)
+      .text(function (d) {
+        return d;
+      });
+  }
+
+  private static getLegendIconXOffset(d: string) {
+    switch (d) {
+      case "Deal Sign":
+        return 30;
+      case "Deal Close/Day 1":
+        return 140;
+      case "Day 2":
+        return 300;
+      case "Pens Down":
+        return 380;
+      case "Active Program":
+        return 490;
+      case "Transition to Sustaining":
+        return 630;
+      case "Error":
+        return 830;
+    }
+  }
+
+  private static getLegendTextXOffset(d: string) {
+    switch (d) {
+      case "Deal Sign":
+        return 58;
+      case "Deal Close/Day 1":
+        return 168;
+      case "Day 2":
+        return 328;
+      case "Pens Down":
+        return 403;
+      case "Active Program":
+        return 513;
+      case "Transition to Sustaining":
+        return 655;
+      case "Error":
+        return 878;
+    }
+  }
+
+  private hideLegend(svgContainer: Selection<SVGElement, SVGElement>): void {
+    d3Select(".projectTimeline").selectAll(".legend").remove();
+    d3Select(".projectTimeline").selectAll(".legend-text").remove();
   }
 
   private getRowTooltipData(value: any): VisualTooltipDataItem[] {
@@ -663,10 +800,7 @@ export class ProjectTimeline implements IVisual {
     let objectName = options.objectName;
     let objectEnumeration: VisualObjectInstance[] = [];
 
-    if (
-      !this.projectTimelineSettings ||
-      !this.projects
-    ) {
+    if (!this.projectTimelineSettings || !this.projects) {
       return objectEnumeration;
     }
 
@@ -692,14 +826,14 @@ export class ProjectTimeline implements IVisual {
       //         }
       //     }
       // },
-      case "showLegend": 
+      case "showLegend":
         objectEnumeration.push({
           objectName: objectName,
           properties: {
             show: this.projectTimelineSettings.showLegend.show,
           },
-          selector: null
-        })
+          selector: null,
+        });
     }
 
     return objectEnumeration;
