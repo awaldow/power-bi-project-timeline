@@ -520,7 +520,7 @@ export class ProjectTimeline implements IVisual {
         return d.pensDown ? "" : "none";
       }
     );
-
+    let errorIcon = "<svg width='24' height='24'><rect width='24' height='1' y='12' style='fill:rgb(255,0,0);'/></svg>";
     let icons = [
       dealSignIcon,
       dealCloseIcon,
@@ -528,6 +528,7 @@ export class ProjectTimeline implements IVisual {
       pensDownIcon,
       activeProgramIcon,
       transitionToSustainingIcon,
+      errorIcon
     ];
 
     this.tooltipServiceWrapper.addTooltip(
@@ -616,6 +617,8 @@ export class ProjectTimeline implements IVisual {
             return icons[4];
           case "Transition to Sustaining":
             return icons[5];
+          case "Error": 
+            return icons[6];
         }
       });
     d3Select(".projectTimeline")
@@ -647,7 +650,7 @@ export class ProjectTimeline implements IVisual {
       case "Transition to Sustaining":
         return 630;
       case "Error":
-        return 830;
+        return 835;
     }
   }
 
@@ -666,7 +669,7 @@ export class ProjectTimeline implements IVisual {
       case "Transition to Sustaining":
         return 655;
       case "Error":
-        return 878;
+        return 865;
     }
   }
 
