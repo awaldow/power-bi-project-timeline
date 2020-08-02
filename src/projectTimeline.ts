@@ -1,6 +1,6 @@
 import "./../style/visual.less";
-import { event as d3Event, select as d3Select } from "d3-selection";
-import { scaleLinear, scaleBand, scaleTime, scaleOrdinal } from "d3-scale";
+import { select as d3Select } from "d3-selection";
+import { scaleBand, scaleTime } from "d3-scale";
 import { timeMonth } from "d3-time";
 import { timeFormat } from "d3-time-format";
 import isValid from "date-fns/isValid";
@@ -9,29 +9,19 @@ import { axisBottom, axisTop, axisLeft } from "d3-axis";
 
 import {
   getValue,
-  getCategoricalObjectValue,
 } from "./objectEnumerationUtility";
-
-import { getLocalizedString } from "./localization/localizationHelper";
 
 import powerbiVisualsApi from "powerbi-visuals-api";
 import powerbi = powerbiVisualsApi;
 
 type Selection<T1, T2 = T1> = d3.Selection<any, T1, any, T2>;
-import ScaleLinear = d3.ScaleLinear;
-const getEvent = () => require("d3-selection").event;
 
-import DataViewCategoryColumn = powerbi.DataViewCategoryColumn;
-import DataViewObjects = powerbi.DataViewObjects;
 import EnumerateVisualObjectInstancesOptions = powerbi.EnumerateVisualObjectInstancesOptions;
-import Fill = powerbi.Fill;
 import ISandboxExtendedColorPalette = powerbi.extensibility.ISandboxExtendedColorPalette;
 import ISelectionId = powerbi.visuals.ISelectionId;
 import ISelectionManager = powerbi.extensibility.ISelectionManager;
 import IVisual = powerbi.extensibility.IVisual;
-import IVisualEventService = powerbi.extensibility.IVisualEventService;
 import IVisualHost = powerbi.extensibility.visual.IVisualHost;
-import PrimitiveValue = powerbi.PrimitiveValue;
 import VisualObjectInstance = powerbi.VisualObjectInstance;
 import VisualObjectInstanceEnumeration = powerbi.VisualObjectInstanceEnumeration;
 import VisualTooltipDataItem = powerbi.extensibility.VisualTooltipDataItem;
@@ -71,20 +61,12 @@ interface ProjectTimelineRow {
   selectionId: ISelectionId;
 }
 
-let viewModel: ProjectTimelineViewModel = {
-  projects: [],
-  settings: <ProjectTimelineSettings>{},
-};
-
 function visualTransform(
   options: VisualUpdateOptions,
   host: IVisualHost
 ): ProjectTimelineViewModel {
   let dataViews = options.dataViews;
   let defaultSettings: ProjectTimelineSettings = {
-    // milestonesMarkPhases: {
-    //   show: false,
-    // },
     showLegend: {
       show: true,
     },
@@ -110,17 +92,7 @@ function visualTransform(
   let colorPalette: ISandboxExtendedColorPalette = host.colorPalette;
   let objects = dataViews[0].metadata.objects;
 
-  const strokeColor: string = getColumnStrokeColor(colorPalette);
-
   let projectTimelineSettings: ProjectTimelineSettings = {
-    // milestonesMarkPhases: {
-    //   show: getValue<boolean>(
-    //     objects,
-    //     "milestonesMarkPhases",
-    //     "show",
-    //     defaultSettings.milestonesMarkPhases.show
-    //   ),
-    // },
     showLegend: {
       show: getValue<boolean>(
         objects,
@@ -130,8 +102,6 @@ function visualTransform(
       ),
     },
   };
-
-  const strokeWidth: number = getColumnStrokeWidth(colorPalette.isHighContrast);
 
   for (let i = 0, len = Math.max(milestones.length, 0); i < len; i++) {
     const selectionId: ISelectionId = host
@@ -229,20 +199,9 @@ function getRoleIndex(dataView: powerbiVisualsApi.DataView[], role: string) {
   }
 }
 
-function getColumnStrokeColor(
-  colorPalette: ISandboxExtendedColorPalette
-): string {
-  return colorPalette.isHighContrast ? colorPalette.foreground.value : null;
-}
-
-function getColumnStrokeWidth(isHighContrast: boolean): number {
-  return isHighContrast ? 2 : 0;
-}
-
 export class ProjectTimeline implements IVisual {
   private svg: Selection<any>;
   private host: IVisualHost;
-  private selectionManager: ISelectionManager;
   private projectContainer: Selection<SVGElement>;
   private xAxis: Selection<SVGElement>;
   private yAxis: Selection<SVGElement>;
@@ -250,15 +209,7 @@ export class ProjectTimeline implements IVisual {
   private projectTimelineSettings: ProjectTimelineSettings;
   private tooltipServiceWrapper: ITooltipServiceWrapper;
   private locale: string;
-  private helpLinkElement: Selection<any>;
-  private element: HTMLElement;
-  private isLandingPageOn: boolean;
-  private LandingPageRemoved: boolean;
-  private LandingPage: Selection<any>;
-  private averageLine: Selection<SVGElement>;
   private tickFormat: string;
-
-  private projectSelection: d3.Selection<d3.BaseType, any, d3.BaseType, any>;
 
   static Config = {
     xScalePadding: 0.1,
@@ -276,8 +227,6 @@ export class ProjectTimeline implements IVisual {
   constructor(options: VisualConstructorOptions) {
     this.tickFormat = "%m/%d/%Y";
     this.host = options.host;
-    this.element = options.element;
-    this.selectionManager = options.host.createSelectionManager();
     this.locale = options.host.locale;
 
     this.tooltipServiceWrapper = createTooltipServiceWrapper(
@@ -550,7 +499,7 @@ export class ProjectTimeline implements IVisual {
     );
 
     if (settings.showLegend.show === true) {
-      this.showLegend(width, icons);
+      this.showLegend(icons);
       this.projectContainer.attr(
         "transform",
         "translate(" +
@@ -560,7 +509,7 @@ export class ProjectTimeline implements IVisual {
           ")"
       );
     } else {
-      this.hideLegend(this.projectContainer.selectAll(".legend"));
+      this.hideLegend();
       this.projectContainer.attr(
         "transform",
         "translate(" + ProjectTimeline.Config.margins.left + ", 20)"
@@ -568,7 +517,7 @@ export class ProjectTimeline implements IVisual {
     }
   }
 
-  private showLegend(width: number, icons: string[]): void {
+  private showLegend(icons: string[]): void {
     const legendValues = [
       "Deal Sign",
       "Deal Close/Day 1",
@@ -673,13 +622,12 @@ export class ProjectTimeline implements IVisual {
     }
   }
 
-  private hideLegend(svgContainer: Selection<SVGElement, SVGElement>): void {
+  private hideLegend(): void {
     d3Select(".projectTimeline").selectAll(".legend").remove();
     d3Select(".projectTimeline").selectAll(".legend-text").remove();
   }
 
   private getRowTooltipData(value: any): VisualTooltipDataItem[] {
-    let language = getLocalizedString(this.locale, "LanguageKey");
     return [
       {
         displayName: value.projectName,
@@ -694,7 +642,7 @@ export class ProjectTimeline implements IVisual {
     value: any,
     context: HTMLElement
   ): VisualTooltipDataItem[] {
-    let language = getLocalizedString(this.locale, "LanguageKey");
+    //let language = getLocalizedString(this.locale, "LanguageKey");
     return [
       {
         displayName: value.projectName,
@@ -710,7 +658,7 @@ export class ProjectTimeline implements IVisual {
     context: HTMLElement
   ): string {
     let icon = "";
-    context.classList.forEach((value, key, list) => {
+    context.classList.forEach((value: string) => {
       if (value !== "icon") {
         icon = value;
       }
@@ -729,7 +677,7 @@ export class ProjectTimeline implements IVisual {
 
   private getIconHeader(context: HTMLElement): string {
     let icon = "";
-    context.classList.forEach((value, key, list) => {
+    context.classList.forEach((value: string) => {
       if (value !== "icon") {
         icon = value;
       }
@@ -737,7 +685,7 @@ export class ProjectTimeline implements IVisual {
     return this.deCamelCase(icon);
   }
 
-  private replaceAt(str, index, replacement) {
+  private replaceAt(str: string, index: number, replacement: string) {
     return (
       str.substr(0, index) +
       replacement +
@@ -808,27 +756,6 @@ export class ProjectTimeline implements IVisual {
     }
 
     switch (objectName) {
-      // case "milestonesMarkPhases":
-      //   objectEnumeration.push({
-      //     objectName: objectName,
-      //     properties: {
-      //       show: this.projectTimelineSettings.milestonesMarkPhases.show,
-      //     },
-      //     selector: null,
-      //   });
-      //   break;
-      // for capabilities.json
-      //   "milestonesMarkPhases": {
-      //     "displayName": "Milestones Mark Phases",
-      //     "properties": {
-      //         "show": {
-      //             "displayName": "Milestones Mark Phases",
-      //             "type": {
-      //                 "bool": true
-      //             }
-      //         }
-      //     }
-      // },
       case "showLegend":
         objectEnumeration.push({
           objectName: objectName,
@@ -840,9 +767,5 @@ export class ProjectTimeline implements IVisual {
     }
 
     return objectEnumeration;
-  }
-
-  public destroy(): void {
-    // Perform any cleanup tasks here
   }
 }
