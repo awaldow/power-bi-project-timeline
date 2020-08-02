@@ -11,8 +11,6 @@ import {
   getValue,
 } from "./objectEnumerationUtility";
 
-import { getLocalizedString } from "./localization/localizationHelper";
-
 import powerbiVisualsApi from "powerbi-visuals-api";
 import powerbi = powerbiVisualsApi;
 
@@ -630,7 +628,6 @@ export class ProjectTimeline implements IVisual {
   }
 
   private getRowTooltipData(value: any): VisualTooltipDataItem[] {
-    let language = getLocalizedString(this.locale, "LanguageKey");
     return [
       {
         displayName: value.projectName,
