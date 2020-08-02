@@ -39,11 +39,6 @@
             "displayName": "Error",
             "name": "error",
             "kind": "Grouping"
-        },
-        {
-            "displayName": "Milestones",
-            "name": "milestones",
-            "kind": "Grouping"
         }
     ],
     "dataViewMappings": [
@@ -90,11 +85,6 @@
                             "for": {
                                 "in": "error"
                             }
-                        },
-                        {
-                            "for": {
-                                "in": "milestones"
-                            }
                         }
                     ]
                 }
@@ -102,13 +92,13 @@
         }
     ],
     "objects": {
-        "milestonesMarkPhases": {
-            "displayName": "Milestones Mark Phases",
+        "showLegend": {
+            "displayName": "Show Legend",
             "properties": {
                 "show": {
-                    "displayName": "Milestones Mark Phases",
+                    "displayName": "Show Legend",
                     "type": {
-                        "bool": false
+                        "bool": true
                     }
                 }
             }

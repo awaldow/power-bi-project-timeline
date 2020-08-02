@@ -45,9 +45,12 @@ import {
 } from "./tooltipServiceWrapper";
 
 interface ProjectTimelineSettings {
-  milestonesMarkPhases: {
+  // milestonesMarkPhases: {
+  //   show: boolean;
+  // };
+  showLegend: {
     show: boolean;
-  };
+  }
 }
 
 interface ProjectTimelineViewModel {
@@ -79,9 +82,12 @@ function visualTransform(
 ): ProjectTimelineViewModel {
   let dataViews = options.dataViews;
   let defaultSettings: ProjectTimelineSettings = {
-    milestonesMarkPhases: {
-      show: false,
-    },
+    // milestonesMarkPhases: {
+    //   show: false,
+    // },
+    showLegend: {
+      show: true,
+    }
   };
   let viewModel: ProjectTimelineViewModel = {
     projects: [],
@@ -107,14 +113,22 @@ function visualTransform(
   const strokeColor: string = getColumnStrokeColor(colorPalette);
 
   let projectTimelineSettings: ProjectTimelineSettings = {
-    milestonesMarkPhases: {
+    // milestonesMarkPhases: {
+    //   show: getValue<boolean>(
+    //     objects,
+    //     "milestonesMarkPhases",
+    //     "show",
+    //     defaultSettings.milestonesMarkPhases.show
+    //   ),
+    // },
+    showLegend: {
       show: getValue<boolean>(
         objects,
-        "milestonesMarkPhases",
+        "showLegend",
         "show",
-        defaultSettings.milestonesMarkPhases.show
-      ),
-    },
+        defaultSettings.showLegend.show
+      )
+    }
   };
 
   const strokeWidth: number = getColumnStrokeWidth(colorPalette.isHighContrast);
@@ -651,22 +665,41 @@ export class ProjectTimeline implements IVisual {
 
     if (
       !this.projectTimelineSettings ||
-      !this.projectTimelineSettings.milestonesMarkPhases ||
       !this.projects
     ) {
       return objectEnumeration;
     }
 
     switch (objectName) {
-      case "milestonesMarkPhases":
+      // case "milestonesMarkPhases":
+      //   objectEnumeration.push({
+      //     objectName: objectName,
+      //     properties: {
+      //       show: this.projectTimelineSettings.milestonesMarkPhases.show,
+      //     },
+      //     selector: null,
+      //   });
+      //   break;
+      // for capabilities.json
+      //   "milestonesMarkPhases": {
+      //     "displayName": "Milestones Mark Phases",
+      //     "properties": {
+      //         "show": {
+      //             "displayName": "Milestones Mark Phases",
+      //             "type": {
+      //                 "bool": true
+      //             }
+      //         }
+      //     }
+      // },
+      case "showLegend": 
         objectEnumeration.push({
           objectName: objectName,
           properties: {
-            show: this.projectTimelineSettings.milestonesMarkPhases.show,
+            show: this.projectTimelineSettings.showLegend.show,
           },
-          selector: null,
-        });
-        break;
+          selector: null
+        })
     }
 
     return objectEnumeration;
