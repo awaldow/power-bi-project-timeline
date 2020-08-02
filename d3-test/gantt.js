@@ -44,7 +44,9 @@ d3.gantt = function () {
   }
 
   var transitionToSustainingTransform = function (d) {
-    return "translate(" + x(d.endDate) + "," + y(d.projectName) + ")";
+    let yOffset = y(d.projectName) + 19;
+    let xOffset = x(d.endDate) - 10;
+    return "translate(" + xOffset + "," + yOffset + ")";
   }
 
   var pensDownTransform = function (d) {
@@ -104,7 +106,58 @@ d3.gantt = function () {
       .attr("class", "gantt-chart")
       .attr("width", width + margin.left + margin.right)
       .attr("height", height + margin.top + margin.bottom)
-      .attr("transform", "translate(" + margin.left + ", " + margin.top + ")");
+      .attr("transform", "translate(" + margin.left + ", " + (margin.top + 40) + ")");
+
+    let dealCloseIcon = '<svg width="24" height="24"><circle style="fill: rgb(94, 77, 129);" cx="12" cy="12" r="12" /><text style="fill: rgb(255, 255, 255); fill-rule: evenodd; font-family: &quot;Roboto Slab&quot;; font-size: 22px; white-space: pre;"><tspan x="6" y="19">1</tspan></text></svg>';
+    let day2Icon =
+      '<svg width="24" height="24"><circle style="fill: rgb(153, 136, 85);" cx="12" cy="12" r="12" /><text style="fill: rgb(255, 255, 255); fill-rule: evenodd; font-family: &quot;Roboto Slab&quot;; font-size: 22px; white-space: pre;"><tspan x="7" y="19">2</tspan></text></svg>';
+    let transitionToSustainingIcon =
+      '<path d="M0 0h24v24H0z" fill="none" /><path d="M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2z" fill="green" />';
+    const legendValues = ["Deal Sign", "Deal Close/Day 1", "Day 2", "Pens Down", "Active Program", "Transition to Sustaining", "Error"];
+    let icons = [
+      dealCloseIcon,
+      day2Icon,
+      transitionToSustainingIcon
+    ];
+
+    d3.select('.chart').selectAll('.legend').data(legendValues)
+      .enter()
+      .append("g")
+      .attr("class", "legend icon")
+      .attr("width", 24)
+      .attr("height", 24)
+      .attr("transform", function (d) {
+        let ret = "translate(";
+        let index = legendValues.indexOf(d);
+        ret += margin.left + (index * 150);
+        ret += ",";
+        ret += "0)";
+        return ret;
+      })
+      .html(function (d) {
+        switch (d) {
+          case 'Deal Close/Day 1': return icons[0];
+          case 'Day 2': return icons[1];
+          case 'Transition to Sustaining': return icons[2];
+        }
+      });
+    d3.select('.chart').selectAll('.legend-text').data(legendValues)
+      .enter()
+      .append('text')
+      .attr('class', 'legend-text')
+      .attr('width', 100)
+      .attr('height', 24)
+      .attr('transform', function (d) {
+        let ret = "translate(";
+        let index = legendValues.indexOf(d);
+        ret += margin.left + 28 + (index * 150);
+        ret += ",";
+        ret += "16)";
+        return ret;
+      })
+      .text(function (d) {
+        return d;
+      })
 
     svg.selectAll(".chart")
       .data(projects, keyFunction).enter()
@@ -158,7 +211,6 @@ d3.gantt = function () {
       .attr("y", 18)
       .attr("width", 24)
       .attr("height", 24);
-    let dealCloseIcon = '<svg width="24" height="24"><circle style="fill: rgb(94, 77, 129);" cx="12" cy="12" r="12" /><text style="fill: rgb(255, 255, 255); fill-rule: evenodd; font-family: &quot;Roboto Slab&quot;; font-size: 22px; white-space: pre;"><tspan x="6" y="19">1</tspan></text></svg>';
     svg.selectAll('.icon')
       .data(projects)
       .enter().append("g")//.attr("xlink:href", "svg/dealclose-day1.svg")
@@ -168,8 +220,6 @@ d3.gantt = function () {
       .attr("width", 24)
       .attr("height", 24)
       .html(dealCloseIcon);
-    let day2Icon =
-      '<svg width="24" height="24"><circle style="fill: rgb(153, 136, 85);" cx="12" cy="12" r="12" /><text style="fill: rgb(255, 255, 255); fill-rule: evenodd; font-family: &quot;Roboto Slab&quot;; font-size: 22px; white-space: pre;"><tspan x="7" y="19">2</tspan></text></svg>';
     svg.selectAll('.icon')
       .data(projects)
       .enter().append("g")//.attr("xlink:href", "svg/day2.svg")
@@ -191,13 +241,14 @@ d3.gantt = function () {
       .attr("height", 24);
     svg.selectAll('.icon')
       .data(projects)
-      .enter().append("image").attr("xlink:href", "svg/transitiontosustaining.svg")
+      .enter().append("g")//.append("image").attr("xlink:href", "svg/transitiontosustaining.svg")
       .attr("transform", transitionToSustainingTransform)
       .attr("display", function (d) { return !d.activeProgram && !d.pensDown ? "" : "none" })
       .attr("x", -10)
       .attr("y", 19)
       .attr("width", 24)
-      .attr("height", 24);
+      .attr("height", 24)
+      .html(transitionToSustainingIcon);
     svg.selectAll('.icon')
       .data(projects)
       .enter().append("image").attr("xlink:href", "svg/pensdown-24px.svg")
@@ -215,6 +266,7 @@ d3.gantt = function () {
       .call(xAxis);
 
     svg.append("g").attr("class", "y axis").transition().call(yAxis);
+
 
     return gantt;
 
