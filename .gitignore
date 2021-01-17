@@ -2,3 +2,4 @@
 
 webpack.statistics.dev.html
 .tmp/*
+dist/
