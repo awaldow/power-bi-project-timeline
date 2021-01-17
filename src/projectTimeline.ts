@@ -323,95 +323,26 @@ export class ProjectTimeline implements IVisual {
       .text(function (d: ProjectTimelineRow) {
         return d.pmAssignDate.toLocaleDateString("en-US");
       });
-
+    
     graphBody.error(this.projectContainer, this.projects, x, y);
-    // this.projectContainer.selectAll(".error").remove();
-    // this.projectContainer
-    //   .selectAll(".error")
-    //   .data(this.projects)
-    //   .enter()
-    //   .append("rect")
-    //   .attr("class", "error")
-    //   .attr("y", 30)
-    //   .attr("transform", transforms.errorTransform(x, y))
-    //   .attr("height", 1)
-    //   .attr("display", function (d: ProjectTimelineRow) {
-    //     return d.error ? "" : "none";
-    //   })
-    //   .attr("width", function (d: ProjectTimelineRow) {
-    //     return x(d.endDate) - x(d.pmAssignDate);
-    //   });    
-    icons.dealSignIconGenerator(this.projectContainer, x, y);
+  
+    this.projectContainer.selectAll(".icon").remove();
 
-    let dealCloseIcon =
-      '<svg width="24" height="24"><circle style="fill: rgb(94, 77, 129);" cx="12" cy="12" r="12" /><text style="fill: rgb(255, 255, 255); fill-rule: evenodd; font-family: &quot;Roboto Slab&quot;; font-size: 22px; white-space: pre;"><tspan x="6" y="19">1</tspan></text></svg>';
-    this.renderIcon(
-      this.projectContainer,
-      "dealClose",
-      dealCloseIcon,
-      transforms.innerIconTransform("dealClose", x, y),
-      function (d: ProjectTimelineRow) {
-        return d.dealClose == null || !isValid(d.dealClose) ? "none" : "";
-      }
-    );
+    icons.dealSignIconGenerator(this.projectContainer, this.projects, x, y);
+    icons.dealCloseIconGenerator(this.projectContainer, this.projects, x, y);
+    icons.day2IconGenerator(this.projectContainer, this.projects, x, y);
+    icons.activeProgramIconGenerator(this.projectContainer, this.projects, x, y);
+    icons.transitionToSustainingIconGenerator(this.projectContainer, this.projects, x, y);
+    icons.pensDownIconGenerator(this.projectContainer, this.projects, x, y);
 
-    let day2Icon =
-      '<svg width="24" height="24"><circle style="fill: rgb(153, 136, 85);" cx="12" cy="12" r="12" /><text style="fill: rgb(255, 255, 255); fill-rule: evenodd; font-family: &quot;Roboto Slab&quot;; font-size: 22px; white-space: pre;"><tspan x="7" y="19">2</tspan></text></svg>';
-    this.renderIcon(
-      this.projectContainer,
-      "day2",
-      day2Icon,
-      transforms.innerIconTransform("day2", x, y),
-      function (d: ProjectTimelineRow) {
-        return d.day2 == null || !isValid(d.day2) ? "none" : "";
-      }
-    );
-
-    let activeProgramIcon =
-      '<path d="M0 0h24v24H0z" fill="none" /><path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z" fill="#29416c" />';
-    this.renderIcon(
-      this.projectContainer,
-      "activeProgram",
-      activeProgramIcon,
-      transforms.endIconTransform("activeProgram", x, y),
-      function (d: ProjectTimelineRow) {
-        return !d.pensDown && d.activeProgram ? "" : "none";
-      }
-    );
-
-    let transitionToSustainingIcon =
-      '<path d="M0 0h24v24H0z" fill="none" /><path d="M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2z" fill="green" />';
-    this.renderIcon(
-      this.projectContainer,
-      "transitionToSustaining",
-      transitionToSustainingIcon,
-      transforms.endIconTransform("transitionToSustaining", x, y),
-      function (d: ProjectTimelineRow) {
-        return !d.activeProgram && !d.pensDown ? "" : "none";
-      }
-    );
-
-    let pensDownIcon =
-      '<path d="M0 0h24v24H0z" fill="none" /><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" fill="red" />';
-    this.renderIcon(
-      this.projectContainer,
-      "pensDown",
-      pensDownIcon,
-      transforms.endIconTransform("pensDown", x, y),
-      function (d: ProjectTimelineRow) {
-        return d.pensDown ? "" : "none";
-      }
-    );
-    let errorIcon =
-      "<svg width='24' height='24'><rect width='24' height='1' y='12' style='fill:rgb(255,0,0);'/></svg>";
     let iconsList = [
       icons.dealSignIcon,
-      dealCloseIcon,
-      day2Icon,
-      pensDownIcon,
-      activeProgramIcon,
-      transitionToSustainingIcon,
-      errorIcon,
+      icons.dealCloseIcon,
+      icons.day2Icon,
+      icons.pensDownIcon,
+      icons.activeProgramIcon,
+      icons.transitionToSustainingIcon,
+      icons.errorIcon,
     ];
 
     this.tooltipServiceWrapper.addTooltip(

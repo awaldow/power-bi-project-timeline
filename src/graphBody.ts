@@ -4,7 +4,8 @@ import { ProjectTimelineRow } from './interfaces';
 type Selection<T1, T2 = T1> = d3.Selection<any, T1, any, T2>;
 
 export module graphBody {
-  export const error = (projectContainer: Selection<SVGElement, SVGElement>, projects: ProjectTimelineRow[], x: (s: any) => number, y: (d: any) => number) => {
+    export const error = (projectContainer: Selection<SVGElement, SVGElement>, projects: ProjectTimelineRow[], x: (s: any) => number, y: (d: any) => number) => {
+        debugger;
     projectContainer.selectAll(".error").remove();
     projectContainer
       .selectAll(".error")
