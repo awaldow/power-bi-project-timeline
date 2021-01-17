@@ -4,12 +4,17 @@ import { scaleBand, scaleTime } from "d3-scale";
 import { timeMonth } from "d3-time";
 import { timeFormat } from "d3-time-format";
 import isValid from "date-fns/isValid";
+import {
+  ProjectTimelineRow,
+  ProjectTimelineSettings,
+  ProjectTimelineViewModel,
+} from "./interfaces";
+import { transforms } from "./transforms";
+import { icons } from './icons';
 
 import { axisBottom, axisTop, axisLeft } from "d3-axis";
 
-import {
-  getValue,
-} from "./objectEnumerationUtility";
+import { getValue } from "./objectEnumerationUtility";
 
 import powerbiVisualsApi from "powerbi-visuals-api";
 import powerbi = powerbiVisualsApi;
@@ -33,33 +38,6 @@ import {
   TooltipEventArgs,
   ITooltipServiceWrapper,
 } from "./tooltipServiceWrapper";
-
-interface ProjectTimelineSettings {
-  // milestonesMarkPhases: {
-  //   show: boolean;
-  // };
-  showLegend: {
-    show: boolean;
-  };
-}
-
-interface ProjectTimelineViewModel {
-  projects: ProjectTimelineRow[];
-  settings: ProjectTimelineSettings;
-}
-
-interface ProjectTimelineRow {
-  projectName: string;
-  pmAssignDate: Date;
-  endDate: Date;
-  dealSign: Date;
-  dealClose: Date;
-  day2: Date;
-  pensDown: boolean;
-  error: boolean;
-  activeProgram: boolean;
-  selectionId: ISelectionId;
-}
 
 function visualTransform(
   options: VisualUpdateOptions,
@@ -124,9 +102,9 @@ function visualTransform(
     project = populateProjectWithRoles(project, milestones, i, dataViews);
 
     projects.push(project);
-    projects.sort(function (a, b) {
-      return a.pmAssignDate.getTime() - b.pmAssignDate.getTime();
-    });
+    projects.sort(
+      (a, b) => a.pmAssignDate.getTime() - b.pmAssignDate.getTime()
+    );
   }
 
   return {
@@ -295,52 +273,17 @@ export class ProjectTimeline implements IVisual {
     this.xAxis.call(xAxis);
     this.yAxis.call(yAxis);
 
-    var keyFunction = function (d: ProjectTimelineRow) {
-      return d.pmAssignDate + d.projectName + d.endDate;
-    };
-
-    var rectTransform = function (d: ProjectTimelineRow) {
-      return "translate(" + x(d.pmAssignDate) + "," + y(d.projectName) + ")";
-    };
-
-    var innerIconTransform = function (icon: string) {
-      return (d: ProjectTimelineRow) => {
-        let yOffset = y(d.projectName) + 18;
-        let xOffset = 0;
-        if (d[icon] != null && isValid(d[icon])) {
-          xOffset = x(d[icon]);
-        }
-        return "translate(" + xOffset + "," + yOffset + ")";
-      };
-    };
-
-    var endIconTransform = function (icon: string) {
-      return (d: ProjectTimelineRow) => {
-        if (icon === "activeProgram") {
-          let yOffset = y(d.projectName) + 18;
-          return "translate(" + x(new Date()) + "," + yOffset + ")";
-        } else {
-          let yOffset = y(d.projectName) + 18;
-          return "translate(" + x(d.endDate) + "," + yOffset + ")";
-        }
-      };
-    };
-
-    var errorTransform = function (d: ProjectTimelineRow) {
-      return "translate(" + x(d.pmAssignDate) + "," + y(d.projectName) + ")";
-    };
-
     this.projectContainer.selectAll(".bar").remove();
     this.projectContainer
       .selectAll(".chart")
-      .data(this.projects, keyFunction)
+      .data(this.projects, transforms.keyFunction)
       .enter()
       .append("rect")
       .attr("rx", 0)
       .attr("ry", 0)
       .attr("class", "bar")
       .attr("y", 20)
-      .attr("transform", rectTransform)
+      .attr("transform", transforms.rectTransform(x, y))
       .attr("height", 20)
       .attr("display", function (d: ProjectTimelineRow) {
         if (
@@ -365,7 +308,7 @@ export class ProjectTimeline implements IVisual {
       .enter()
       .append("text")
       .attr("class", "label")
-      .attr("transform", rectTransform)
+      .attr("transform", transforms.rectTransform(x, y))
       .attr("x", -80)
       .attr("y", 25)
       .text(function (d: ProjectTimelineRow) {
@@ -373,7 +316,7 @@ export class ProjectTimeline implements IVisual {
       })
       .append("tspan")
       .attr("class", "label")
-      .attr("transform", rectTransform)
+      .attr("transform", transforms.rectTransform(x, y))
       .attr("x", -80)
       .attr("y", 40)
       .text(function (d: ProjectTimelineRow) {
@@ -388,7 +331,7 @@ export class ProjectTimeline implements IVisual {
       .append("rect")
       .attr("class", "error")
       .attr("y", 30)
-      .attr("transform", errorTransform)
+      .attr("transform", transforms.errorTransform(x, y))
       .attr("height", 1)
       .attr("display", function (d: ProjectTimelineRow) {
         return d.error ? "" : "none";
@@ -397,26 +340,17 @@ export class ProjectTimeline implements IVisual {
         return x(d.endDate) - x(d.pmAssignDate);
       });
 
-    this.projectContainer.selectAll(".icon").remove();
     let dealSignIcon =
       '<g><path d="M0 0h24v24H0z" fill="none" /><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" fill="#cc681f" /></g>';
-    this.renderIcon(
-      this.projectContainer,
-      "dealSign",
-      dealSignIcon,
-      innerIconTransform("dealSign"),
-      function (d: ProjectTimelineRow) {
-        return d.dealSign == null || !isValid(d.dealSign) ? "none" : "";
-      }
-    );
-
+    icons.dealSignIcon(this.projectContainer, dealSignIcon, x, y);
+    
     let dealCloseIcon =
       '<svg width="24" height="24"><circle style="fill: rgb(94, 77, 129);" cx="12" cy="12" r="12" /><text style="fill: rgb(255, 255, 255); fill-rule: evenodd; font-family: &quot;Roboto Slab&quot;; font-size: 22px; white-space: pre;"><tspan x="6" y="19">1</tspan></text></svg>';
     this.renderIcon(
       this.projectContainer,
       "dealClose",
       dealCloseIcon,
-      innerIconTransform("dealClose"),
+      transforms.innerIconTransform("dealClose", x, y),
       function (d: ProjectTimelineRow) {
         return d.dealClose == null || !isValid(d.dealClose) ? "none" : "";
       }
@@ -428,7 +362,7 @@ export class ProjectTimeline implements IVisual {
       this.projectContainer,
       "day2",
       day2Icon,
-      innerIconTransform("day2"),
+      transforms.innerIconTransform("day2", x, y),
       function (d: ProjectTimelineRow) {
         return d.day2 == null || !isValid(d.day2) ? "none" : "";
       }
@@ -440,7 +374,7 @@ export class ProjectTimeline implements IVisual {
       this.projectContainer,
       "activeProgram",
       activeProgramIcon,
-      endIconTransform("activeProgram"),
+      transforms.endIconTransform("activeProgram", x, y),
       function (d: ProjectTimelineRow) {
         return !d.pensDown && d.activeProgram ? "" : "none";
       }
@@ -452,7 +386,7 @@ export class ProjectTimeline implements IVisual {
       this.projectContainer,
       "transitionToSustaining",
       transitionToSustainingIcon,
-      endIconTransform("transitionToSustaining"),
+      transforms.endIconTransform("transitionToSustaining", x, y),
       function (d: ProjectTimelineRow) {
         return !d.activeProgram && !d.pensDown ? "" : "none";
       }
@@ -464,20 +398,21 @@ export class ProjectTimeline implements IVisual {
       this.projectContainer,
       "pensDown",
       pensDownIcon,
-      endIconTransform("pensDown"),
+      transforms.endIconTransform("pensDown", x, y),
       function (d: ProjectTimelineRow) {
         return d.pensDown ? "" : "none";
       }
     );
-    let errorIcon = "<svg width='24' height='24'><rect width='24' height='1' y='12' style='fill:rgb(255,0,0);'/></svg>";
-    let icons = [
+    let errorIcon =
+      "<svg width='24' height='24'><rect width='24' height='1' y='12' style='fill:rgb(255,0,0);'/></svg>";
+    let iconsList = [
       dealSignIcon,
       dealCloseIcon,
       day2Icon,
       pensDownIcon,
       activeProgramIcon,
       transitionToSustainingIcon,
-      errorIcon
+      errorIcon,
     ];
 
     this.tooltipServiceWrapper.addTooltip(
@@ -499,7 +434,7 @@ export class ProjectTimeline implements IVisual {
     );
 
     if (settings.showLegend.show === true) {
-      this.showLegend(icons);
+      this.showLegend(iconsList);
       this.projectContainer.attr(
         "transform",
         "translate(" +
@@ -527,15 +462,15 @@ export class ProjectTimeline implements IVisual {
       "Transition to Sustaining",
       "Error",
     ];
-    var legendIconTransform = function(d: string) {
+    var legendIconTransform = (d: string) => {
       let ret = "translate(";
       let index = ProjectTimeline.getLegendIconXOffset(d);
       ret += index;
       ret += ",";
       ret += "0)";
       return ret;
-    }
-    var legendTextTransform = function(d: string) {
+    };
+    var legendTextTransform = (d: string) => {
       let ret = "translate(";
       let index = ProjectTimeline.getLegendTextXOffset(d);
       ret += index;
@@ -552,7 +487,7 @@ export class ProjectTimeline implements IVisual {
       .attr("width", 24)
       .attr("height", 24)
       .attr("transform", legendIconTransform)
-      .html(function (d) {
+      .html((d) => {
         switch (d) {
           case "Deal Sign":
             return icons[0];
@@ -566,7 +501,7 @@ export class ProjectTimeline implements IVisual {
             return icons[4];
           case "Transition to Sustaining":
             return icons[5];
-          case "Error": 
+          case "Error":
             return icons[6];
         }
       });
@@ -579,9 +514,7 @@ export class ProjectTimeline implements IVisual {
       .attr("width", 100)
       .attr("height", 24)
       .attr("transform", legendTextTransform)
-      .text(function (d) {
-        return d;
-      });
+      .text((d) => d);
   }
 
   private static getLegendIconXOffset(d: string) {
