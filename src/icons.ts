@@ -42,6 +42,16 @@ export module icons {
   export const errorIcon =
     "<svg width='24' height='24'><rect width='24' height='1' y='12' style='fill:rgb(255,0,0);'/></svg>";
 
+  export const iconsList = [
+        dealSignIcon,
+        dealCloseIcon,
+        day2Icon,
+        pensDownIcon,
+        activeProgramIcon,
+        transitionToSustainingIcon,
+        errorIcon,
+      ];
+
   export const dealSignIconGenerator = (
     projectContainer: Selection<SVGElement, SVGElement>,
     projects: ProjectTimelineRow[],

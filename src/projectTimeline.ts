@@ -328,22 +328,13 @@ export class ProjectTimeline implements IVisual {
   
     this.projectContainer.selectAll(".icon").remove();
 
+    // TODO: Create a method that calls all these so that adding new ones is easier later
     icons.dealSignIconGenerator(this.projectContainer, this.projects, x, y);
     icons.dealCloseIconGenerator(this.projectContainer, this.projects, x, y);
     icons.day2IconGenerator(this.projectContainer, this.projects, x, y);
     icons.activeProgramIconGenerator(this.projectContainer, this.projects, x, y);
     icons.transitionToSustainingIconGenerator(this.projectContainer, this.projects, x, y);
     icons.pensDownIconGenerator(this.projectContainer, this.projects, x, y);
-
-    let iconsList = [
-      icons.dealSignIcon,
-      icons.dealCloseIcon,
-      icons.day2Icon,
-      icons.pensDownIcon,
-      icons.activeProgramIcon,
-      icons.transitionToSustainingIcon,
-      icons.errorIcon,
-    ];
 
     this.tooltipServiceWrapper.addTooltip(
       this.projectContainer.selectAll(".bar"),
@@ -364,7 +355,7 @@ export class ProjectTimeline implements IVisual {
     );
 
     if (settings.showLegend.show === true) {
-      this.showLegend(iconsList);
+      this.showLegend(icons.iconsList);
       this.projectContainer.attr(
         "transform",
         "translate(" +
