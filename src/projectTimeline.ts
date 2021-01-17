@@ -340,11 +340,8 @@ export class ProjectTimeline implements IVisual {
     //   })
     //   .attr("width", function (d: ProjectTimelineRow) {
     //     return x(d.endDate) - x(d.pmAssignDate);
-    //   });
-
-    let dealSignIcon =
-      '<g><path d="M0 0h24v24H0z" fill="none" /><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" fill="#cc681f" /></g>';
-    icons.dealSignIcon(this.projectContainer, dealSignIcon, x, y);
+    //   });    
+    icons.dealSignIconGenerator(this.projectContainer, x, y);
 
     let dealCloseIcon =
       '<svg width="24" height="24"><circle style="fill: rgb(94, 77, 129);" cx="12" cy="12" r="12" /><text style="fill: rgb(255, 255, 255); fill-rule: evenodd; font-family: &quot;Roboto Slab&quot;; font-size: 22px; white-space: pre;"><tspan x="6" y="19">1</tspan></text></svg>';
@@ -408,7 +405,7 @@ export class ProjectTimeline implements IVisual {
     let errorIcon =
       "<svg width='24' height='24'><rect width='24' height='1' y='12' style='fill:rgb(255,0,0);'/></svg>";
     let iconsList = [
-      dealSignIcon,
+      icons.dealSignIcon,
       dealCloseIcon,
       day2Icon,
       pensDownIcon,
