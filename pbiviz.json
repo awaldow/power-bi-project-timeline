@@ -6,8 +6,8 @@
         "visualClassName": "ProjectTimeline",
         "version": "0.0.1",
         "description": "Visual for an M&A Project Timeline",
-        "supportUrl": "",
-        "gitHubUrl": ""
+        "supportUrl": "https://github.com/awaldow/power-bi-project-timeline/issues",
+        "gitHubUrl": "https://github.com/awaldow/power-bi-project-timeline"
     },
     "apiVersion": "2.6.0",
     "author": {
