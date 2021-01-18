@@ -187,8 +187,6 @@ class TooltipServiceWrapper implements ITooltipServiceWrapper {
 
       if (this.handleTouchTimeoutId) clearTimeout(this.handleTouchTimeoutId);
 
-      // At the end of touch action, set a timeout that will let us ignore the incoming mouse events for a small amount of time
-      // TO BE CHANGED: any better way to do this?
       this.handleTouchTimeoutId = setTimeout(() => {
         this.handleTouchTimeoutId = undefined;
       }, this.handleTouchDelay);
