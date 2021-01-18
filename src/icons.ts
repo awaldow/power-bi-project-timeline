@@ -52,6 +52,21 @@ export module icons {
         errorIcon,
       ];
 
+  export const renderIcons = (
+    projectContainer: Selection<SVGElement, SVGElement>,
+    projects: ProjectTimelineRow[],
+    x: (s: any) => number,
+    y: (d: any) => number
+  ) => {
+      projectContainer.selectAll(".icon").remove();
+      dealSignIconGenerator(projectContainer, projects, x, y);
+      dealCloseIconGenerator(projectContainer, projects, x, y);
+      day2IconGenerator(projectContainer, projects, x, y);
+      activeProgramIconGenerator(projectContainer, projects, x, y);
+      transitionToSustainingIconGenerator(projectContainer, projects, x, y);
+      pensDownIconGenerator(projectContainer, projects, x, y);
+  };
+  
   export const dealSignIconGenerator = (
     projectContainer: Selection<SVGElement, SVGElement>,
     projects: ProjectTimelineRow[],

@@ -140,7 +140,17 @@ class TooltipServiceWrapper implements ITooltipServiceWrapper {
     });
 
     // --- Touch events ---
+    this.registerTouchEvents<T>(selection, rootNode, getTooltipInfoDelegate, getDataPointIdentity);
+  }
 
+  private registerTouchEvents<T>(
+    selection: Selection<BaseType, any, BaseType, any>,
+    rootNode: ContainerElement,
+    getTooltipInfoDelegate: (
+      args: TooltipEventArgs<T>
+    ) => VisualTooltipDataItem[],
+    getDataPointIdentity: (args: TooltipEventArgs<T>) => ISelectionId
+  ) {
     let touchStartEventName: string = TooltipServiceWrapper.touchStartEventName();
     let touchEndEventName: string = TooltipServiceWrapper.touchEndEventName();
     let isPointerEvent: boolean = TooltipServiceWrapper.usePointerEvents();
@@ -195,14 +205,14 @@ class TooltipServiceWrapper implements ITooltipServiceWrapper {
   private getRegisteredClassParent(target: HTMLElement): HTMLElement {
     let foundClass: boolean = false;
     target.classList.forEach((value, key, list) => {
-        if(this.registeredClasses.findIndex(p => p === value) != -1) {
-            foundClass = true;
-        }
-    })
-    if(!foundClass) {
-        return this.getRegisteredClassParent(target.parentElement);
+      if (this.registeredClasses.findIndex((p) => p === value) != -1) {
+        foundClass = true;
+      }
+    });
+    if (!foundClass) {
+      return this.getRegisteredClassParent(target.parentElement);
     } else {
-        return target;
+      return target;
     }
   }
 
@@ -211,7 +221,9 @@ class TooltipServiceWrapper implements ITooltipServiceWrapper {
     isPointerEvent: boolean,
     isTouchEvent: boolean
   ): TooltipEventArgs<T> {
-    let target = this.getRegisteredClassParent(<HTMLElement>(<Event>d3Event).target);
+    let target = this.getRegisteredClassParent(
+      <HTMLElement>(<Event>d3Event).target
+    );
     let data: T = d3Select<HTMLElement, T>(target).datum();
 
     let mouseCoordinates = this.getCoordinates(rootNode, isPointerEvent);

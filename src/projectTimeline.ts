@@ -273,68 +273,10 @@ export class ProjectTimeline implements IVisual {
     let yAxis = axisLeft(y).tickSize(0);
     this.xAxis.call(xAxis);
     this.yAxis.call(yAxis);
-
-    this.projectContainer.selectAll(".bar").remove();
-    this.projectContainer
-      .selectAll(".chart")
-      .data(this.projects, transforms.keyFunction)
-      .enter()
-      .append("rect")
-      .attr("rx", 0)
-      .attr("ry", 0)
-      .attr("class", "bar")
-      .attr("y", 20)
-      .attr("transform", transforms.rectTransform(x, y))
-      .attr("height", 20)
-      .attr("display", function (d: ProjectTimelineRow) {
-        if (
-          d.projectName === "" ||
-          d.error === null ||
-          d.pensDown === null ||
-          d.pmAssignDate === null ||
-          d.endDate === null
-        ) {
-          return "none";
-        }
-        return "";
-      })
-      .attr("width", function (d: ProjectTimelineRow) {
-        return x(d.endDate) - x(d.pmAssignDate);
-      });
-
-    this.projectContainer.selectAll(".label").remove();
-    this.projectContainer
-      .selectAll(".text")
-      .data(this.projects)
-      .enter()
-      .append("text")
-      .attr("class", "label")
-      .attr("transform", transforms.rectTransform(x, y))
-      .attr("x", -80)
-      .attr("y", 25)
-      .text(function (d: ProjectTimelineRow) {
-        return d.projectName;
-      })
-      .append("tspan")
-      .attr("class", "label")
-      .attr("transform", transforms.rectTransform(x, y))
-      .attr("x", -80)
-      .attr("y", 40)
-      .text(function (d: ProjectTimelineRow) {
-        return d.pmAssignDate.toLocaleDateString("en-US");
-      });
     
-    graphBody.error(this.projectContainer, this.projects, x, y);
-  
-    this.projectContainer.selectAll(".icon").remove();
+    graphBody.renderGraphBody(this.projectContainer, this.projects, x, y);
 
-    // TODO: Create a method that calls all these so that adding new ones is easier later
-    icons.dealSignIconGenerator(this.projectContainer, this.projects, x, y);
-    icons.dealCloseIconGenerator(this.projectContainer, this.projects, x, y);
-    icons.day2IconGenerator(this.projectContainer, this.projects, x, y);
-    icons.activeProgramIconGenerator(this.projectContainer, this.projects, x, y);
-    icons.transitionToSustainingIconGenerator(this.projectContainer, this.projects, x, y);
-    icons.pensDownIconGenerator(this.projectContainer, this.projects, x, y);
+    icons.renderIcons(this.projectContainer, this.projects, x, y);
 
     this.tooltipServiceWrapper.addTooltip(
       this.projectContainer.selectAll(".bar"),
