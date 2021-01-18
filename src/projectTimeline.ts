@@ -278,9 +278,13 @@ export class ProjectTimeline implements IVisual {
     this.xAxis.call(xAxis);
     this.yAxis.call(yAxis);
     
-    graphBody.renderGraphBody(this.projectContainer, this.projects, x, y);
-
-    icons.renderIcons(this.projectContainer, this.projects, x, y);
+    try {
+      graphBody.renderGraphBody(this.projectContainer, this.projects, x, y);
+      icons.renderIcons(this.projectContainer, this.projects, x, y);
+    }
+    catch(e) {
+      this.events.renderingFailed(options, e.message);
+    }
 
     this.tooltipServiceWrapper.addTooltip(
       this.projectContainer.selectAll(".bar"),
