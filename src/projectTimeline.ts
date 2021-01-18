@@ -375,6 +375,8 @@ export class ProjectTimeline implements IVisual {
             return icons[5];
           case "Error":
             return icons[6];
+          default:
+            return "Unknown legend value"
         }
       });
     d3Select(".projectTimeline")
@@ -513,27 +515,6 @@ export class ProjectTimeline implements IVisual {
       ret += "now";
     }
     return ret;
-  }
-
-  private renderIcon(
-    svgContainer: Selection<SVGElement, SVGElement>,
-    iconType: string,
-    iconSvg: string,
-    transformFunction: (d: ProjectTimelineRow) => string,
-    displayFunction: (d: ProjectTimelineRow) => string
-  ) {
-    svgContainer
-      .selectAll(".icons")
-      .data(this.projects)
-      .enter()
-      .append("g")
-      .attr("class", iconType + " icon")
-      .attr("transform", transformFunction)
-      .attr("display", displayFunction)
-      .attr("y", 19)
-      .attr("width", 24)
-      .attr("height", 24)
-      .html(iconSvg);
   }
 
   private firstStartDate(projects: ProjectTimelineRow[]): Date {
