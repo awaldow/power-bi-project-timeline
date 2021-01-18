@@ -28,6 +28,7 @@ import ISelectionId = powerbi.visuals.ISelectionId;
 import ISelectionManager = powerbi.extensibility.ISelectionManager;
 import IVisual = powerbi.extensibility.IVisual;
 import IVisualHost = powerbi.extensibility.visual.IVisualHost;
+import IVisualEventService = powerbi.extensibility.IVisualEventService;
 import VisualObjectInstance = powerbi.VisualObjectInstance;
 import VisualObjectInstanceEnumeration = powerbi.VisualObjectInstanceEnumeration;
 import VisualTooltipDataItem = powerbi.extensibility.VisualTooltipDataItem;
@@ -189,6 +190,7 @@ export class ProjectTimeline implements IVisual {
   private tooltipServiceWrapper: ITooltipServiceWrapper;
   private locale: string;
   private tickFormat: string;
+  private events: IVisualEventService;
 
   static Config = {
     xScalePadding: 0.1,
@@ -207,6 +209,7 @@ export class ProjectTimeline implements IVisual {
     this.tickFormat = "%m/%d/%Y";
     this.host = options.host;
     this.locale = options.host.locale;
+    this.events = options.host.eventService;
 
     this.tooltipServiceWrapper = createTooltipServiceWrapper(
       this.host.tooltipService,
@@ -236,6 +239,7 @@ export class ProjectTimeline implements IVisual {
   }
 
   public update(options: VisualUpdateOptions) {
+    this.events.renderingStarted(options);
     let viewModel: ProjectTimelineViewModel = visualTransform(
       options,
       this.host
@@ -313,6 +317,7 @@ export class ProjectTimeline implements IVisual {
         "translate(" + ProjectTimeline.Config.margins.left + ", 20)"
       );
     }
+    this.events.renderingFinished(options);
   }
 
   private showLegend(icons: string[]): void {
