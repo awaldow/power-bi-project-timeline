@@ -230,6 +230,7 @@ export class ProjectTimeline implements IVisual {
     this.host = options.host;
     this.locale = options.host.locale;
     this.events = options.host.eventService;
+    options.element.style.overflow = 'auto';
 
     this.tooltipServiceWrapper = createTooltipServiceWrapper(
       this.host.tooltipService,
