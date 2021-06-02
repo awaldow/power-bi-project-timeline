@@ -83,7 +83,6 @@ export module graphBody {
         if (
           d.projectName === "" ||
           d.error === null ||
-          d.pensDown === null ||
           d.pmAssignDate === null ||
           d.endDate === null
         ) {

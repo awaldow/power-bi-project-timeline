@@ -96,7 +96,7 @@ function visualTransform(
       dealSign: null,
       activeProgram: false,
       error: false,
-      pensDown: false,
+      pensDown: null,
       selectionId,
     };
     project = populateProjectWithRoles(project, milestones, i, dataViews);
@@ -167,11 +167,12 @@ function populateProjectWithRoles(
     project.error = Boolean(milestones[index][error].valueOf());
   }
   let pensDown = getRoleIndex(dataViews, "pensDown");
-  if (pensDown >= 0) {
-    project.pensDown = Boolean(milestones[index][pensDown].valueOf());
-    if (project.pensDown) {
-      project.activeProgram = false;
-    }
+  if (pensDown >= 0 && milestones[index][pensDown] != null) {
+    project.pensDown = new Date(milestones[index][pensDown].toString());
+    project.activeProgram = false;
+  }
+  else {
+    project.pensDown = null;
   }
 
   return project;

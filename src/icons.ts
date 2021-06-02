@@ -129,7 +129,7 @@ export module icons {
       "activeProgram",
       activeProgramIcon,
       projects,
-      transforms.innerIconTransform("activeProgram", x, y),
+      transforms.endIconTransform("activeProgram", x, y),
       (d: ProjectTimelineRow) => (!d.pensDown && d.activeProgram ? "" : "none")
     );
   };
@@ -145,7 +145,7 @@ export module icons {
       "transitionToSustaining",
       transitionToSustainingIcon,
       projects,
-      transforms.innerIconTransform("transitionToSustaining", x, y),
+      transforms.endIconTransform("transitionToSustaining", x, y),
       (d: ProjectTimelineRow) => (!d.activeProgram && !d.pensDown ? "" : "none")
     );
   };

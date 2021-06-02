@@ -23,7 +23,7 @@ export interface ProjectTimelineSettings {
     dealSign: Date;
     dealClose: Date;
     day2: Date;
-    pensDown: boolean;
+    pensDown: Date;
     error: boolean;
     activeProgram: boolean;
     selectionId: ISelectionId;
