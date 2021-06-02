@@ -82,6 +82,7 @@ function visualTransform(
       ),
     },
   };
+  debugger;
   for (let i = 0, len = Math.max(milestones.length, 0); i < len; i++) {
     const selectionId: ISelectionId = host
       .createSelectionIdBuilder()
@@ -97,6 +98,7 @@ function visualTransform(
       activeProgram: false,
       error: false,
       pensDown: null,
+      transitionToSustaining: null,
       selectionId,
     };
     project = populateProjectWithRoles(project, milestones, i, dataViews);
@@ -166,6 +168,7 @@ function populateProjectWithRoles(
   if (error >= 0) {
     project.error = Boolean(milestones[index][error].valueOf());
   }
+
   let pensDown = getRoleIndex(dataViews, "pensDown");
   if (pensDown >= 0 && milestones[index][pensDown] != null) {
     project.pensDown = new Date(milestones[index][pensDown].toString());
@@ -173,6 +176,15 @@ function populateProjectWithRoles(
   }
   else {
     project.pensDown = null;
+  }
+
+  let transitionToSustaining = getRoleIndex(dataViews, "transitionToSustaining");
+  if (transitionToSustaining >= 0 && milestones[index][transitionToSustaining] != null) {
+    project.transitionToSustaining = new Date(milestones[index][transitionToSustaining].toString());
+    project.activeProgram = false;
+  }
+  else {
+    project.transitionToSustaining = null;
   }
 
   return project;

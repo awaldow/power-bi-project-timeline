@@ -26,5 +26,6 @@ export interface ProjectTimelineSettings {
     pensDown: Date;
     error: boolean;
     activeProgram: boolean;
+    transitionToSustaining: Date;
     selectionId: ISelectionId;
   }

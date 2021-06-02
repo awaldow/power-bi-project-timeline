@@ -36,6 +36,11 @@
             "kind": "Grouping"
         },
         {
+            "displayName": "Transition to Sustaining",
+            "name": "transitionToSustaining",
+            "kind": "Grouping"
+        },
+        {
             "displayName": "Error",
             "name": "error",
             "kind": "Grouping"
@@ -79,6 +84,11 @@
                         {
                             "for": {
                                 "in": "pensDown"
+                            }
+                        },
+                        {
+                            "for": {
+                                "in": "transitionToSustaining"
                             }
                         },
                         {
