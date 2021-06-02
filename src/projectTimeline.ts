@@ -70,7 +70,7 @@ function visualTransform(
   let projects: ProjectTimelineRow[] = [];
 
   let colorPalette: ISandboxExtendedColorPalette = host.colorPalette;
-  let objects = dataViews[0].metadata.columns;
+  let objects = dataViews[0].metadata.objects;
 
   let projectTimelineSettings: ProjectTimelineSettings = {
     showLegend: {
@@ -172,7 +172,6 @@ function populateProjectWithRoles(
   let pensDown = getRoleIndex(dataViews, "pensDown");
   if (pensDown >= 0 && milestones[index][pensDown] != null) {
     project.pensDown = new Date(milestones[index][pensDown].toString());
-    project.activeProgram = false;
   }
   else {
     project.pensDown = null;
@@ -180,8 +179,18 @@ function populateProjectWithRoles(
 
   let transitionToSustaining = getRoleIndex(dataViews, "transitionToSustaining");
   if (transitionToSustaining >= 0 && milestones[index][transitionToSustaining] != null) {
-    project.transitionToSustaining = new Date(milestones[index][transitionToSustaining].toString());
-    project.activeProgram = false;
+    let transitionDate = new Date(milestones[index][transitionToSustaining].toString());
+    if (isValid(transitionDate)) {
+      project.transitionToSustaining = transitionDate;
+    }
+    else {
+      if (endDateIdx >= 0) {
+        project.transitionToSustaining = new Date(milestones[index][endDateIdx].toString());
+      }
+      else {
+        project.transitionToSustaining = new Date();
+      }
+    }
   }
   else {
     project.transitionToSustaining = null;
@@ -230,7 +239,7 @@ export class ProjectTimeline implements IVisual {
     this.host = options.host;
     this.locale = options.host.locale;
     this.events = options.host.eventService;
-    options.element.style.overflow = 'auto';
+    options.element.style.overflowY = 'auto';
 
     this.tooltipServiceWrapper = createTooltipServiceWrapper(
       this.host.tooltipService,
@@ -260,6 +269,7 @@ export class ProjectTimeline implements IVisual {
   }
 
   public update(options: VisualUpdateOptions) {
+    debugger;
     this.events.renderingStarted(options);
     let viewModel: ProjectTimelineViewModel = visualTransform(
       options,
@@ -270,8 +280,9 @@ export class ProjectTimeline implements IVisual {
 
     let legendHeight = settings.showLegend.show ? 40 : 0;
 
-    let width = options.viewport.width;
-    let height = options.viewport.height - legendHeight;
+    let width = options.viewport.width - 15;
+    //let height = options.viewport.height - legendHeight;
+    let height = legendHeight + 30 + (35 * this.projects.length);
 
     this.svg.attr("width", width).attr("height", height);
     let y = scaleBand()
@@ -524,7 +535,7 @@ export class ProjectTimeline implements IVisual {
   private deCamelCase(icon: string): string {
     let converted = icon.repeat(1);
     converted = this.replaceAt(converted, 0, converted[0].toUpperCase());
-    let splitConverted = converted.split(/(?=[A-Z])/g);
+    let splitConverted = converted.split(/(?=[A-Z0-9])/g);
     return splitConverted.join(" ");
   }
 

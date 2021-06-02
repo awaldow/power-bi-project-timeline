@@ -15,7 +15,7 @@ import DataViewMetadataColumn = powerbi.DataViewMetadataColumn;
  * @param {string} propertyName     - Name of desired property.
  * @param {T} defaultValue          - Default value of desired property.
  */
-export function getValue<T>(objects: DataViewMetadataColumn[], objectName: string, propertyName: string, defaultValue: T): T {
+export function getValue<T>(objects: DataViewObjects, objectName: string, propertyName: string, defaultValue: T): T {
     if (objects) {
         let object = objects[objectName];
         if (object) {
