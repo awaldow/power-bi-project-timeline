@@ -70,7 +70,7 @@ function visualTransform(
   let projects: ProjectTimelineRow[] = [];
 
   let colorPalette: ISandboxExtendedColorPalette = host.colorPalette;
-  let objects = dataViews[0].metadata.objects;
+  let objects = dataViews[0].metadata.columns;
 
   let projectTimelineSettings: ProjectTimelineSettings = {
     showLegend: {
@@ -82,7 +82,6 @@ function visualTransform(
       ),
     },
   };
-
   for (let i = 0, len = Math.max(milestones.length, 0); i < len; i++) {
     const selectionId: ISelectionId = host
       .createSelectionIdBuilder()
@@ -100,7 +99,6 @@ function visualTransform(
       pensDown: false,
       selectionId,
     };
-
     project = populateProjectWithRoles(project, milestones, i, dataViews);
 
     projects.push(project);
@@ -144,16 +142,25 @@ function populateProjectWithRoles(
     project.activeProgram = true;
   }
   let dealSign = getRoleIndex(dataViews, "dealSign");
-  if (dealSign >= 0) {
+  if (dealSign >= 0 && milestones[index][dealSign] != null) {
     project.dealSign = new Date(milestones[index][dealSign].toString());
   }
+  else {
+    project.dealSign = null;
+  }
   let dealClose = getRoleIndex(dataViews, "dealClose");
-  if (dealClose >= 0) {
+  if (dealClose >= 0 && milestones[index][dealClose] != null) {
     project.dealClose = new Date(milestones[index][dealClose].toString());
   }
+  else {
+    project.dealClose = null;
+  }
   let day2 = getRoleIndex(dataViews, "day2");
-  if (day2 >= 0) {
+  if (day2 >= 0 && milestones[index][day2] != null) {
     project.day2 = new Date(milestones[index][day2].toString());
+  }
+  else {
+    project.day2 = null;
   }
   let error = getRoleIndex(dataViews, "error");
   if (error >= 0) {
@@ -268,8 +275,8 @@ export class ProjectTimeline implements IVisual {
       .rangeRound([
         0,
         width -
-          ProjectTimeline.Config.margins.left -
-          ProjectTimeline.Config.margins.right,
+        ProjectTimeline.Config.margins.left -
+        ProjectTimeline.Config.margins.right,
       ])
       .nice();
 
@@ -277,12 +284,12 @@ export class ProjectTimeline implements IVisual {
     let yAxis = axisLeft(y).tickSize(0);
     this.xAxis.call(xAxis);
     this.yAxis.call(yAxis);
-    
+
     try {
       graphBody.renderGraphBody(this.projectContainer, this.projects, x, y);
       icons.renderIcons(this.projectContainer, this.projects, x, y);
     }
-    catch(e) {
+    catch (e) {
       this.events.renderingFailed(options, e.message);
     }
 
@@ -309,10 +316,10 @@ export class ProjectTimeline implements IVisual {
       this.projectContainer.attr(
         "transform",
         "translate(" +
-          ProjectTimeline.Config.margins.left +
-          ", " +
-          (20 + legendHeight) +
-          ")"
+        ProjectTimeline.Config.margins.left +
+        ", " +
+        (20 + legendHeight) +
+        ")"
       );
     } else {
       this.hideLegend();
