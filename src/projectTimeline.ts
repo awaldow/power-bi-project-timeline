@@ -82,7 +82,7 @@ function visualTransform(
       ),
     },
   };
-  debugger;
+
   for (let i = 0, len = Math.max(milestones.length, 0); i < len; i++) {
     const selectionId: ISelectionId = host
       .createSelectionIdBuilder()
